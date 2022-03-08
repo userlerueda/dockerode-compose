@@ -21,13 +21,14 @@
   ],
   "homepage": "https://github.com/apocas/dockerode-compose#readme",
   "dependencies": {
-    "dockerode": "^3.2.1",
-    "js-yaml": "^4.0.0",
+    "@types/dockerode": "^3.3.3",
+    "dockerode": "^3.3.1",
+    "js-yaml": "^4.1.0",
     "tar-fs": "^2.1.1"
   },
   "devDependencies": {
     "chai": "~4.2.0",
-    "memorystream": "~0.3.0",
+    "memorystream": "~0.3.1",
     "mocha": "^7.1.0"
   }
 }
