@@ -1,6 +1,5 @@
 var Dockerode = require('dockerode');
-var DockerodeCompose = require('../compose');
-
+const DockerodeCompose = require('../dist/compose').Compose;
 var docker = new Dockerode();
 
 var yamlFile = './test/assets/wordpress_original.yml';
@@ -18,23 +17,22 @@ if (process.argv.length > 2) {
 var compose = new DockerodeCompose(docker, yamlFile, projectName);
 
 (async () => {
-  compose.pull((err, stream) => {
+  compose.pullWithCallback((err, stream) => {
     docker.modem.followProgress(
       stream,
       (err, output) => {
         if (err) {
-          console.log("Pull finished with errors...")
+          console.debug("Pull finished with errors...")
           console.error(err)
         } else {
-          console.log("Pull finished without errors")
+          console.debug("Pull finished without errors")
         }
         // onFinish
       },
       (event) => {
         // onProgress
-        console.log(event);
+        console.debug(event);
       }
     );
   });
-  // console.log(await compose.pull());
 })();

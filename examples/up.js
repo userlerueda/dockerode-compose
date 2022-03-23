@@ -2,6 +2,7 @@ var Dockerode = require('dockerode');
 var DockerodeCompose = require('../compose');
 
 var docker = new Dockerode();
+const logger = require('../lib/logger')
 
 var yamlFile = './test/assets/wordpress_original.yml'
 var projectName = 'wordpress'
@@ -19,5 +20,5 @@ var compose = new DockerodeCompose(docker, yamlFile, projectName);
 
 (async () => {
   var state = await compose.up();
-  console.log(state);
+  logger.info(state);
 })();

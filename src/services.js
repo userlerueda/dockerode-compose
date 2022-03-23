@@ -170,8 +170,10 @@ async function up(docker, projectName, recipe, output, options) {
     };
 
     if (service.networks !== undefined) {
-      servicesTools.buildNetworks(service.networks, networksToAttach);
+      console.debug("Service has networks to attach to...")
+      servicesTools.buildNetworks(projectName, service.networks, networksToAttach, opts);
     } else {
+      console.debug("Attaching to default network...")
       opts.HostConfig.NetworkMode = projectName + '_default';
       opts.NetworkingConfig.EndpointsConfig[projectName + '_default'] = {
         IPAMConfig: null,
@@ -306,6 +308,7 @@ async function up(docker, projectName, recipe, output, options) {
       }
     }
 
+    var container;
     var containerInfo;
     let currentContainers = await docker.listContainers({
       all: true,
@@ -318,40 +321,57 @@ async function up(docker, projectName, recipe, output, options) {
         currentContainers[0].State == 'running'
       ) {
         containerInfo = currentContainers[0];
+        container = await docker.getContainer(containerInfo.Id)
       } else {
-        console.debug(`Removing container ${opts.name}. Container may not be running or hash might differ`)
-        await docker.getContainer(currentContainers[0].Id).remove({force: true})
+        console.debug(
+          `Removing container ${opts.name}. Container may not be running or hash might be different`
+        );
+        await docker
+          .getContainer(currentContainers[0].Id)
+          .remove({ force: true });
+        containersAfterRemove = await docker.listContainers({
+          all: true,
+          filters: `{"label":["com.docker.compose.project=${projectName}","com.docker.compose.service=${serviceName}"]}`,
+        });
+
+        if (containersAfterRemove.length) {
+          // something is wrong here, we should not have any containers for the service
+          console.warn(
+            `We were not expecting any containers for the service, but found ${containersAfterRemove.length}`
+          );
+          console.debug(containersAfterRemove);
+        }
       }
     }
 
     if (!containerInfo) {
       console.debug(`Creating container ${opts.name}...`);
-      var container = await docker.createContainer(opts);
-  
-      console.debug(`Networks to Attach to: ${networksToAttach}`)
+      container = await docker.createContainer(opts);
+
       if (networksToAttach.length > 1) {
+        console.debug(`Container has networks to attach to.`)
         let networkNames = Object.keys(networksToAttach[0]);
-        console.debug(`Disconnecting container from network ${networkNames[0]}`)
+        console.debug(`Disconnecting container from network ${networkNames[0]}`);
         await findNetwork(output, networkNames[0]).disconnect({
           Container: container.id,
         });
-        let networksToAttachSorted = tools.sortNetworksToAttach(networksToAttach);
+        let networksToAttachSorted =
+          tools.sortNetworksToAttach(networksToAttach);
         for (var networkToAttach of networksToAttachSorted) {
           let networkName = Object.keys(networkToAttach);
-          console.debug(`Connecting container to network ${networkName}`)
+          console.debug(`Connecting container to network ${networkName}`);
           await findNetwork(output, networkName).connect({
             Container: container.id,
             EndpointConfig: networkToAttach[networkName],
           });
         }
       }
+      console.debug(`Starting container ${opts.name}...`);
+      await container.start()
     }
 
-    console.debug(`Starting container ${opts.name}...`);
-    await container.start();
-    containerInfo = await container.inspect();
-
-    services.push(containerInfo);
+    console.debug(container)
+    services.push(container);
   }
   return services;
 }

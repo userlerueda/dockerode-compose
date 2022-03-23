@@ -2,9 +2,11 @@
   "name": "dockerode-compose",
   "version": "1.3.0",
   "description": "docker-compose in nodejs using dockerode",
-  "main": "./compose.js",
+  "main": "lib/compose.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha -R spec --exit"
+    "test": "./node_modules/mocha/bin/mocha -R spec --exit",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -20,15 +22,22 @@
     "docker-compose"
   ],
   "homepage": "https://github.com/apocas/dockerode-compose#readme",
+  "files": ["lib/**/*"],
   "dependencies": {
-    "@types/dockerode": "^3.3.3",
     "dockerode": "^3.3.1",
     "js-yaml": "^4.1.0",
-    "tar-fs": "^2.1.1"
+    "source-map-loader": "^3.0.1",
+    "tar-fs": "^2.1.1",
+    "ts-loader": "^9.2.8",
+    "winston": "^3.6.0"
   },
   "devDependencies": {
-    "chai": "~4.2.0",
+    "@types/dockerode": "^3.3.5",
+    "@types/js-yaml": "^4.0.5",
+    "@types/tar-fs": "^2.0.1",
+    "chai": "~4.3.6",
     "memorystream": "~0.3.1",
-    "mocha": "^7.1.0"
+    "mocha": "^7.1.0",
+    "typescript": "^4.6.2"
   }
 }

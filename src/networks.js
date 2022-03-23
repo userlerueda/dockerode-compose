@@ -1,4 +1,6 @@
-async function down(docker, projectName, recipe) {
+const logger = require('./logger');
+
+async function down(docker, projectName, recipe, output) {
   var networks = [];
   var networkNames = Object.keys(recipe.networks || { default: null });
   for (var networkName of networkNames) {
@@ -14,7 +16,7 @@ async function down(docker, projectName, recipe) {
 }
 
 async function up(docker, projectName, recipe, output) {
-  console.debug("Creating volumes...")
+  logger.debug("Creating networks...")
   var networks = [];
   var networkNames = Object.keys(recipe.networks || []);
   for (var networkName of networkNames) {
@@ -90,11 +92,15 @@ async function up(docker, projectName, recipe, output) {
   if (networks.length === 0) {
     try {
       let networkName = projectName + '_default'
-      console.debug(`Creating network ${networkName}...`)
+      console.debug(`Creating network "${networkName}" with default driver`)
       networks.push({
         name: networkName,
         network: await docker.createNetwork({
           Name: networkName,
+          Labels: {
+            'com.docker.compose.network': 'default',
+            'com.docker.compose.project': projectName,
+          },
           CheckDuplicate: true,
         }),
       });
@@ -115,6 +121,7 @@ async function up(docker, projectName, recipe, output) {
       }
     }
   }
+  logger.silly(networks)
   return networks;
 }
 

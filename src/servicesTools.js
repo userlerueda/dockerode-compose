@@ -3,6 +3,7 @@ const tar = require('tar-fs');
 const path = require('path');
 const stream = require('stream');
 const { createHash } = require('crypto');
+const logger = require('./logger');
 
 module.exports = {
   buildPorts: function (servicePorts, output) {
@@ -414,7 +415,8 @@ module.exports = {
     return output;
   },
 
-  buildNetworks: function (serviceNetworks, networksToAttach) {
+  buildNetworks: function (projectName, serviceNetworks, networksToAttach, opts) {
+    logger.silly({buildNetworks: {projectName, serviceNetworks, networksToAttach, opts}})
     if (Array.isArray(serviceNetworks)) {
       for (let index = 0; index < serviceNetworks.length; index++) {
         let networkName = projectName + '_' + serviceNetworks[index];
@@ -483,6 +485,7 @@ module.exports = {
         networksToAttach.push(networkTemplate.NetworkingConfig.EndpointsConfig);
       }
     }
+    logger.silly({buildNetworks: {projectName, serviceNetworks, networksToAttach, opts}})
   },
 
   // TODO: OPTIMIZE!
