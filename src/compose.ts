@@ -19,6 +19,7 @@ import {
   ComposeUpOptions,
 } from './models/compose';
 import { Configs } from './configs';
+import { Images } from './images';
 
 export class Compose {
   docker: Dockerode;
@@ -56,18 +57,7 @@ export class Compose {
     }
     output.services = await services.down(this.docker, this.projectName, this.recipe, output);
     if (options.rmi === 'all') {
-      const serviceNames = tools.sortServices(this.recipe);
-      output.images = [];
-      for (const serviceName of serviceNames) {
-        const service = this.recipe.services[serviceName];
-        try {
-          console.log('Removing image ' + service.image);
-          const image = await this.docker.getImage(service.image).remove();
-          output.images.push(image);
-        } catch (e) {
-          console.warn(`WARNING: Image ${service.image} not found.`);
-        }
-      }
+      output.images = await Images.down(this.docker, this.projectName, this.recipe, output);
     }
     return output;
   }

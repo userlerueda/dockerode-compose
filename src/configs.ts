@@ -11,6 +11,7 @@ export module Configs {
     output: ComposeOutput,
   ): Promise<ComposeOutput['configs']> {
     var configs = [];
+    logger.info('Deleting configs...');
     logger.info('Not implemented yet, you will need to manually delete configs');
     return configs;
   }
@@ -21,6 +22,7 @@ export module Configs {
     recipe: ComposeRecipe,
     output: ComposeOutput,
   ): Promise<ComposeOutput['configs']> {
+    logger.info('Creating configs...');
     var configs = [];
     var configNames = Object.keys(recipe.configs || []);
     for (var configName of configNames) {
