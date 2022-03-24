@@ -37,10 +37,21 @@ export interface ComposeOutput {
 
 export interface ComposeRecipe {
   version?: string;
+  configs?: DockerComposeConfigs;
   services?: DockerComposeServices;
   networks?: any;
   volumes?: any;
   secrets?: any;
+}
+
+export interface DockerComposeConfig {
+  file?: string;
+  external?: boolean;
+  name: string;
+}
+
+export interface DockerComposeConfigs {
+  [serviceName: string]: DockerComposeConfig;
 }
 
 export interface DockerComposeServices {

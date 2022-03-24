@@ -4,7 +4,6 @@ import stream = require('stream');
 
 import { Secrets } from './secrets';
 import { Volumes } from './volumes';
-import configs = require('./configs');
 import networks = require('./networks');
 import services = require('./services');
 import tools = require('./tools');
@@ -19,6 +18,7 @@ import {
   ComposeRestartOptions,
   ComposeUpOptions,
 } from './models/compose';
+import { Configs } from './configs';
 
 export class Compose {
   docker: Dockerode;
@@ -48,33 +48,13 @@ export class Compose {
     options = options || {};
 
     output.file = this.file;
-    output.services = await services.down(
-      this.docker,
-      this.projectName,
-      this.recipe,
-      output,
-      options
-    );
-    output.networks = await networks.down(
-      this.docker,
-      this.projectName,
-      this.recipe,
-      output
-    );
+    output.services = await services.down(this.docker, this.projectName, this.recipe, output, options);
+    output.networks = await networks.down(this.docker, this.projectName, this.recipe, output);
+    output.configs = await Configs.down(this.docker, this.projectName, this.recipe, output);
     if (options.volumes) {
-      output.volumes = await Volumes.down(
-        this.docker,
-        this.projectName,
-        this.recipe,
-        output
-      );
+      output.volumes = await Volumes.down(this.docker, this.projectName, this.recipe, output);
     }
-    output.services = await services.down(
-      this.docker,
-      this.projectName,
-      this.recipe,
-      output
-    );
+    output.services = await services.down(this.docker, this.projectName, this.recipe, output);
     if (options.rmi === 'all') {
       const serviceNames = tools.sortServices(this.recipe);
       output.images = [];
@@ -96,48 +76,18 @@ export class Compose {
     var output: ComposeOutput = {};
     try {
       output.file = this.file;
-      output.secrets = await Secrets.up(
-        this.docker,
-        this.projectName,
-        this.recipe,
-        output
-      );
-      output.volumes = await Volumes.up(
-        this.docker,
-        this.projectName,
-        this.recipe,
-        output
-      );
-      output.configs = await configs(
-        this.docker,
-        this.projectName,
-        this.recipe,
-        output
-      );
-      output.networks = await networks.up(
-        this.docker,
-        this.projectName,
-        this.recipe,
-        output
-      );
-      output.services = await services.up(
-        this.docker,
-        this.projectName,
-        this.recipe,
-        output,
-        options
-      );
+      output.secrets = await Secrets.up(this.docker, this.projectName, this.recipe, output);
+      output.volumes = await Volumes.up(this.docker, this.projectName, this.recipe, output);
+      output.configs = await Configs.up(this.docker, this.projectName, this.recipe, output);
+      output.networks = await networks.up(this.docker, this.projectName, this.recipe, output);
+      output.services = await services.up(this.docker, this.projectName, this.recipe, output, options);
       return output;
     } catch (err) {
       throw err;
     }
   }
 
-  pullWithCallback(
-    serviceName?: string,
-    options?: ComposePullOptions,
-    callback?: Callback<Dockerode.Image>
-  ): void {
+  pullWithCallback(serviceName?: string, options?: ComposePullOptions, callback?: Callback<Dockerode.Image>): void {
     var args: ComposePullArgs = {
       serviceName: undefined,
       options: {},
@@ -152,10 +102,7 @@ export class Compose {
         // pull(serviceName, callback)
         args.serviceName = serviceName;
         args.callback = options;
-      } else if (
-        typeof options === 'object' &&
-        typeof callback === 'function'
-      ) {
+      } else if (typeof options === 'object' && typeof callback === 'function') {
         // pull(serviceName, opts, callback)
         args.serviceName = serviceName;
         args.options = options;
@@ -194,10 +141,7 @@ export class Compose {
   async pull(serviceN: any, options: ComposePullOptions) {
     options = options || {};
     var streams = [];
-    var serviceNames =
-      serviceN === undefined || serviceN === null
-        ? tools.sortServices(this.recipe)
-        : [serviceN];
+    var serviceNames = serviceN === undefined || serviceN === null ? tools.sortServices(this.recipe) : [serviceN];
     for (var serviceName of serviceNames) {
       var service = this.recipe.services[serviceName];
       try {
@@ -228,20 +172,8 @@ export class Compose {
     try {
       output.file = this.file;
       if (Object.keys(this.recipe).includes('services')) {
-        output.services = await services.down(
-          this.docker,
-          this.projectName,
-          this.recipe,
-          output,
-          options
-        );
-        output.services = await services.up(
-          this.docker,
-          this.projectName,
-          this.recipe,
-          output,
-          options
-        );
+        output.services = await services.down(this.docker, this.projectName, this.recipe, output, options);
+        output.services = await services.up(this.docker, this.projectName, this.recipe, output, options);
       }
     } catch (err) {
       throw err;
