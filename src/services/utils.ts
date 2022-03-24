@@ -7,22 +7,24 @@ export async function isServiceUpToDate(
   projectName: string,
   serviceName: string,
   configHash: string,
-): Promise<boolean> {
-  let isUpToDate = false;
+) {
+  let isServiceUpToDate = false;
 
   let currentServices = await docker.listContainers({
     all: true,
     filters: `{"label":["com.docker.compose.project=${projectName}","com.docker.compose.service=${serviceName}"]}`,
   });
 
+  let existingContainer: Dockerode.Container;
   if (currentServices.length !== 0) {
     logger.debug(`Found '${currentServices.length}' containers for service: ${serviceName}`);
     for (const currentService of currentServices) {
       let currentServiceHash = currentService.Labels['com.docker.compose.config-hash'];
-      logger.debug(`Current container hash: ${configHash}`);
-      logger.debug(`Current service hash: ${currentServiceHash}`);
+      logger.silly(`Current container hash: ${configHash}`);
+      logger.silly(`Current service hash: ${currentServiceHash}`);
       if (currentServiceHash === configHash) {
-        isUpToDate = true;
+        isServiceUpToDate = true;
+        existingContainer = docker.getContainer(currentService.Id);
       } else {
         logger.debug(`Container '${currentService.Id}' is not up to date. Recreating...`);
         await docker.getContainer(currentService.Id).remove({ force: true });
@@ -30,7 +32,7 @@ export async function isServiceUpToDate(
     }
   }
 
-  return isUpToDate;
+  return { isServiceUpToDate, existingContainer };
 }
 
 export function fillPortArray(start: number, end: number): number[] {

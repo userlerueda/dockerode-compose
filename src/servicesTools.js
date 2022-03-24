@@ -363,7 +363,6 @@ module.exports = {
           volumestr += volume.bind.propagation + ',';
         }
         volumestr = volumestr.slice(0, -1);
-        console.log(volumestr)
         output['Binds'].push(volumestr);
       }
     }

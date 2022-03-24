@@ -20,5 +20,5 @@ var compose = new DockerodeCompose(docker, yamlFile, projectName);
 
 (async () => {
   let state = await compose.up();
-  logger.info(state);
+  console.log(state);
 })();

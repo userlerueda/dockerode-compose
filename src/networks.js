@@ -1,3 +1,5 @@
+const logger = require('./logger').logger;
+
 async function down(docker, projectName, recipe, output) {
   var networks = [];
   var networkNames = Object.keys(recipe.networks || { default: null });
@@ -14,7 +16,7 @@ async function down(docker, projectName, recipe, output) {
 }
 
 async function up(docker, projectName, recipe, output) {
-  console.debug("Creating networks...")
+  logger.info('Creating networks...');
   var networks = [];
   var networkNames = Object.keys(recipe.networks || []);
   for (var networkName of networkNames) {
@@ -29,10 +31,7 @@ async function up(docker, projectName, recipe, output) {
           }),
         });
       } catch (err) {
-        if (
-          err.statusCode == 409 &&
-          err.json.message.includes('already exists')
-        ) {
+        if (err.statusCode == 409 && err.json.message.includes('already exists')) {
           let returnedNetwork = await docker.listNetworks({
             filters: { name: [projectName + '_' + networkName] },
           });
@@ -88,37 +87,37 @@ async function up(docker, projectName, recipe, output) {
   }
 
   if (networks.length === 0) {
+    let networkName = projectName + '_default';
     try {
-      let networkName = projectName + '_default'
-      console.debug(`Creating network "${networkName}" with default driver`)
-      networks.push({
-        name: networkName,
-        network: await docker.createNetwork({
-          Name: networkName,
-          Labels: {
-            'com.docker.compose.network': 'default',
-            'com.docker.compose.project': projectName,
-          },
-          CheckDuplicate: true,
-        }),
+      logger.info(`Creating network "${networkName}" with default driver`);
+      let network = await docker.createNetwork({
+        Name: networkName,
+        Labels: {
+          'com.docker.compose.network': 'default',
+          'com.docker.compose.project': projectName,
+        },
+        CheckDuplicate: true,
       });
+      network['name'] = networkName;
+      network['isDefault'] = true;
+      networks.push(network);
     } catch (err) {
-      if (
-        err.statusCode == 409 &&
-        err.json.message.includes('already exists')
-      ) {
+      if (err.statusCode == 409 && err.json.message.includes('already exists')) {
+        logger.warn(`Network "${networkName}" already exists`);
         let returnedNetwork = await docker.listNetworks({
-          filters: { name: [projectName + '_default'] },
+          filters: { name: [networkName] },
         });
-        networks.push({
-          name: projectName + '_' + networkName,
-          network: await docker.getNetwork(returnedNetwork[0].Id),
-        });
+        logger.silly(`Returned network: ${JSON.stringify(returnedNetwork)}`);
+        let network = await docker.getNetwork(returnedNetwork[0].Id);
+        network['name'] = networkName;
+        network['isDefault'] = true;
+        networks.push(network);
       } else {
         throw err;
       }
     }
   }
+  logger.debug(`Networks: ${JSON.stringify(networks)}`);
   return networks;
 }
 

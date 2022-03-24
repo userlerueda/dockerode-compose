@@ -3,7 +3,7 @@ const servicesTools = require('./servicesTools');
 const fs = require('fs');
 const yaml = require('js-yaml');
 const path = require('path');
-const { logger } = require('./logger');
+const logger = require('./logger').logger;
 const servicesUtils = require('./services/utils');
 const servicesPorts = require('./services/ports');
 
@@ -25,14 +25,21 @@ async function down(docker, projectName, recipe, output, options) {
 }
 
 async function up(docker, projectName, recipe, output, options) {
-  console.debug('Creating containers...');
+  logger.info('Creating containers...');
   var services = [];
   var serviceNames = tools.sortServices(recipe);
   for (var serviceName of serviceNames) {
     const service = recipe.services[serviceName];
     const configHash = servicesTools.buildSHA256(JSON.stringify(service));
-    if (await servicesUtils.isServiceUpToDate(docker, projectName, serviceName, configHash)) {
-      console.info(`Container ${serviceName} is up to date, skipping...`);
+    let { isServiceUpToDate, existingContainer } = await servicesUtils.isServiceUpToDate(
+      docker,
+      projectName,
+      serviceName,
+      configHash,
+    );
+    if (isServiceUpToDate) {
+      logger.info(`Container ${serviceName} is up to date, skipping...`);
+      services.push(existingContainer)
       continue;
     }
     var pathScope = {};
@@ -157,16 +164,27 @@ async function up(docker, projectName, recipe, output, options) {
     }
 
     if (service.networks !== undefined) {
-      console.debug('Service has networks to attach to...');
+      logger.info('Service has networks to attach to...');
       servicesTools.buildNetworks(projectName, service.networks, networksToAttach, opts);
     } else {
-      console.debug('Attaching to default network...');
-      opts.HostConfig.NetworkMode = projectName + '_default';
-      opts.NetworkingConfig.EndpointsConfig[projectName + '_default'] = {
-        IPAMConfig: null,
-        Links: null,
-        Aliases: [serviceName],
-      };
+      logger.info('Service has no networks to attach to, attaching to default network...');
+      let defaultProjectNetwork = output.networks.filter(
+        (network) => network.isDefault !== undefined && network.isDefault === true,
+      );
+      logger.debug(`Found default network: ${JSON.stringify(defaultProjectNetwork)}`);
+      if (defaultProjectNetwork.length == 0) {
+        logger.warn(`No default network found for project ${projectName}`);
+      } else if (defaultProjectNetwork.length > 1) {
+        logger.warn(`We were not expecting more than 1 default network, but we found ${defaultProjectNetwork.length}`);
+      } else {
+        logger.debug('Attaching to default network...');
+        opts.HostConfig.NetworkMode = defaultProjectNetwork[0].name;
+        opts.NetworkingConfig.EndpointsConfig[defaultProjectNetwork[0].name] = {
+          IPAMConfig: null,
+          Links: null,
+          Aliases: [serviceName],
+        };
+      }
     }
 
     // Can be used VolumesFrom from API DIRECTLY inside HostConfig :(
@@ -278,30 +296,30 @@ async function up(docker, projectName, recipe, output, options) {
       }
     }
 
-    console.debug(`Creating container ${opts.name}...`);
+    logger.info(`Creating container ${opts.name}...`);
     container = await docker.createContainer(opts);
 
     if (networksToAttach.length > 1) {
-      console.debug(`Container has networks to attach to.`);
+      logger.debug(`Container has networks to attach to.`);
       let networkNames = Object.keys(networksToAttach[0]);
-      console.debug(`Disconnecting container from network ${networkNames[0]}`);
+      logger.debug(`Disconnecting container from network ${networkNames[0]}`);
       await findNetwork(output, networkNames[0]).disconnect({
         Container: container.id,
       });
       let networksToAttachSorted = tools.sortNetworksToAttach(networksToAttach);
       for (var networkToAttach of networksToAttachSorted) {
         let networkName = Object.keys(networkToAttach);
-        console.debug(`Connecting container to network ${networkName}`);
+        logger.debug(`Connecting container to network ${networkName}`);
         await findNetwork(output, networkName).connect({
           Container: container.id,
           EndpointConfig: networkToAttach[networkName],
         });
       }
     }
-    console.debug(`Starting container ${opts.name}...`);
+    logger.info(`Starting container ${opts.name}...`);
     await container.start();
 
-    console.debug(container);
+    logger.debug(container);
     services.push(container);
   }
   return services;

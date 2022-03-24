@@ -8,10 +8,6 @@ const logFormat = format.printf(function (info) {
 
 const settings = {
   transports: [
-    new transports.Console({
-      level: 'info',
-      format: format.combine(format.colorize(), logFormat),
-    }),
     new transports.File({
       level: 'silly',
       filename: 'logs/compose.log',

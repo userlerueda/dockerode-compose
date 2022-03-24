@@ -14,10 +14,9 @@ export module Volumes {
     var volumeNames = Object.keys(recipe.volumes || []);
     for (var volumeName of volumeNames) {
       try {
-        var volume = await docker.getVolume(projectName + '_' + volumeName).remove();
-        volumes.push(volume);
+        await docker.getVolume(projectName + '_' + volumeName).remove();
       } catch (err) {
-        logger.warning(err);
+        logger.warn(err);
       }
     }
     return volumes;
