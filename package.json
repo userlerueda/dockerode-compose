@@ -23,7 +23,7 @@
   ],
   "homepage": "https://github.com/apocas/dockerode-compose#readme",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "dependencies": {
     "dockerode": "^3.3.1",
