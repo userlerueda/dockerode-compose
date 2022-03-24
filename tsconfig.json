@@ -5,9 +5,10 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
     "noImplicitReturns": true,
+    "sourceMap": true,
     "outDir": "./dist",
     "target": "es5"
   },
-  "include": ["./lib/**/*", "./src/**/*", "src/compose.ts"],
+  "include": ["./src/**/*", "src/compose.ts"],
   "exclude": ["./src/**/*.spec.ts"]
 }
