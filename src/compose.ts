@@ -161,10 +161,10 @@ export class Compose {
     var output: ComposeOutput = {};
     try {
       output.file = this.file;
-      if (Object.keys(this.recipe).includes('services')) {
-        output.services = await services.down(this.docker, this.projectName, this.recipe, output, options);
-        output.services = await services.up(this.docker, this.projectName, this.recipe, output, options);
-      }
+      output.services = await services.down(this.docker, this.projectName, this.recipe, output, options);
+      output.networks = await networks.down(this.docker, this.projectName, this.recipe, output);
+      output.networks = await networks.up(this.docker, this.projectName, this.recipe, output);            
+      output.services = await services.up(this.docker, this.projectName, this.recipe, output, options);
     } catch (err) {
       throw err;
     }
