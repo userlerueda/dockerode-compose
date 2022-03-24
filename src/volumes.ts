@@ -1,4 +1,5 @@
 import Dockerode = require('dockerode');
+import { logger } from './logger';
 import { ComposeOutput, ComposeRecipe } from './models/compose';
 
 export module Volumes {
@@ -29,14 +30,14 @@ async function volumesDown(docker: Dockerode, projectName: string, recipe: Compo
       var volume = await docker.getVolume(projectName + '_' + volumeName).remove();
       volumes.push(volume)
     } catch (e) {
-      console.debug(e)
+      logger.debug(e)
     }
   }
   return volumes;
 }
 
 async function volumesUp(docker: Dockerode, projectName: string, recipe: ComposeRecipe, output: ComposeOutput): Promise<any[]> {
-  console.debug('Creating volumes...');
+  logger.debug('Creating volumes...');
   var volumes = [];
   var volumeNames = Object.keys(recipe.volumes || []);
   for (var volumeName of volumeNames) {
@@ -58,7 +59,7 @@ async function volumesUp(docker: Dockerode, projectName: string, recipe: Compose
     if (volume.name !== undefined) {
       opts.Name = volumeName;
     }
-    console.debug(`Creating volume ${opts.Name}...`);
+    logger.debug(`Creating volume ${opts.Name}...`);
     volumes.push(await docker.createVolume(opts));
   }
   return volumes;

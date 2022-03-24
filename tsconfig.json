@@ -3,10 +3,11 @@
     "allowJs": true,
     "declaration": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "noImplicitReturns": true,
     "outDir": "./dist",
     "target": "es5"
   },
-  "include": ["./lib/**/*", "./src/**/*", "src/compose.ts"]
+  "include": ["./lib/**/*", "./src/**/*", "src/compose.ts"],
+  "exclude": ["./src/**/*.spec.ts"]
 }

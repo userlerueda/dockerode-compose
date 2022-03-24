@@ -1,6 +1,7 @@
 var Dockerode = require('dockerode');
 const DockerodeCompose = require('../dist/compose').Compose;
 var docker = new Dockerode();
+const logger = require('../dist/logger').logger;
 
 var yamlFile = './test/assets/wordpress_original.yml';
 var projectName = 'wordpress';
@@ -22,16 +23,16 @@ var compose = new DockerodeCompose(docker, yamlFile, projectName);
       stream,
       (err, output) => {
         if (err) {
-          console.debug("Pull finished with errors...")
-          console.error(err)
+          logger.warn("Pull finished with errors...")
+          logger.error(err)
         } else {
-          console.debug("Pull finished without errors")
+          logger.info("Pull finished without errors")
         }
         // onFinish
       },
       (event) => {
         // onProgress
-        console.debug(event);
+        logger.silly(event);
       }
     );
   });

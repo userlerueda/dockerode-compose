@@ -3,6 +3,9 @@ const servicesTools = require('./servicesTools');
 const fs = require('fs');
 const yaml = require('js-yaml');
 const path = require('path');
+const { logger } = require('./logger');
+const servicesUtils = require('./services/utils');
+const servicesPorts = require('./services/ports');
 
 async function down(docker, projectName, recipe, output, options) {
   var services = [];
@@ -26,13 +29,15 @@ async function up(docker, projectName, recipe, output, options) {
   var services = [];
   var serviceNames = tools.sortServices(recipe);
   for (var serviceName of serviceNames) {
-    var configHash = servicesTools.buildSHA256(
-      JSON.stringify(recipe.services[serviceName])
-    );
+    const service = recipe.services[serviceName];
+    const configHash = servicesTools.buildSHA256(JSON.stringify(service));
+    if (await servicesUtils.isServiceUpToDate(docker, projectName, serviceName, configHash)) {
+      console.info(`Container ${serviceName} is up to date, skipping...`);
+      continue;
+    }
     var pathScope = {};
     pathScope.file = output.file;
     var networksToAttach = [];
-    var service = recipe.services[serviceName];
     if (service.extends !== undefined) {
       if (service.extends.service !== undefined) {
         service = extendsServices(service, recipe, pathScope);
@@ -54,9 +59,7 @@ async function up(docker, projectName, recipe, output, options) {
 
       if (typeof service.build === 'object') {
         if (service.build.context !== undefined) {
-          var buildContextPath = path.resolve(
-            path.join(absolutePath, service.build.context)
-          );
+          var buildContextPath = path.resolve(path.join(absolutePath, service.build.context));
           if (fs.existsSync(buildContextPath)) {
             if (service.build.args !== undefined) {
               var out = {};
@@ -110,45 +113,25 @@ async function up(docker, projectName, recipe, output, options) {
             }
 
             if (service.build.dockerfile === undefined) {
-              await servicesTools.buildDockerImage(
-                docker,
-                buildContextPath,
-                obj,
-                null,
-                options
-              );
+              await servicesTools.buildDockerImage(docker, buildContextPath, obj, null, options);
             } else {
-              await servicesTools.buildDockerImage(
-                docker,
-                buildContextPath,
-                obj,
-                service.build.dockerfile,
-                options
-              );
+              await servicesTools.buildDockerImage(docker, buildContextPath, obj, service.build.dockerfile, options);
             }
           } else {
             throw new Error(
-              `build path ${buildContextPath} either does not exist, is not accessible, or is not a valid URL.`
+              `build path ${buildContextPath} either does not exist, is not accessible, or is not a valid URL.`,
             );
           }
         } else {
           throw new Error('Build context is required!');
         }
       } else {
-        var dockerFilePath = path.resolve(
-          path.join(absolutePath, service.build)
-        );
+        var dockerFilePath = path.resolve(path.join(absolutePath, service.build));
         if (fs.existsSync(dockerFilePath)) {
-          await servicesTools.buildDockerImage(
-            docker,
-            dockerFilePath,
-            obj,
-            null,
-            options
-          );
+          await servicesTools.buildDockerImage(docker, dockerFilePath, obj, null, options);
         } else {
           throw new Error(
-            `build path ${dockerFilePath} either does not exist, is not accessible, or is not a valid URL.`
+            `build path ${dockerFilePath} either does not exist, is not accessible, or is not a valid URL.`,
           );
         }
       }
@@ -169,11 +152,15 @@ async function up(docker, projectName, recipe, output, options) {
       },
     };
 
+    if (service.ports !== undefined) {
+      servicesPorts.addServicePorts(service, opts);
+    }
+
     if (service.networks !== undefined) {
-      console.debug("Service has networks to attach to...")
+      console.debug('Service has networks to attach to...');
       servicesTools.buildNetworks(projectName, service.networks, networksToAttach, opts);
     } else {
-      console.debug("Attaching to default network...")
+      console.debug('Attaching to default network...');
       opts.HostConfig.NetworkMode = projectName + '_default';
       opts.NetworkingConfig.EndpointsConfig[projectName + '_default'] = {
         IPAMConfig: null,
@@ -213,28 +200,17 @@ async function up(docker, projectName, recipe, output, options) {
       let period = parseInt(service.stop_grace_period);
       if (service.stop_grace_period == period) {
         opts.StopTimeout = service.stop_grace_period;
-      } else if (
-        service.stop_grace_period.includes('m') &&
-        service.stop_grace_period.includes('s')
-      ) {
-        let minutes = parseInt(
-          service.stop_grace_period.substring(
-            0,
-            service.stop_grace_period.indexOf('m')
-          )
-        );
+      } else if (service.stop_grace_period.includes('m') && service.stop_grace_period.includes('s')) {
+        let minutes = parseInt(service.stop_grace_period.substring(0, service.stop_grace_period.indexOf('m')));
         let seconds = parseInt(
           service.stop_grace_period.substring(
             service.stop_grace_period.indexOf('m') + 1,
-            service.stop_grace_period.indexOf('s')
-          )
+            service.stop_grace_period.indexOf('s'),
+          ),
         );
         opts.StopTimeout = minutes * 60 + seconds;
       } else {
-        opts.StopTimeout = service.stop_grace_period.substring(
-          0,
-          service.stop_grace_period.length - 2
-        );
+        opts.StopTimeout = service.stop_grace_period.substring(0, service.stop_grace_period.length - 2);
       }
     }
     if (service.stop_signal !== undefined) {
@@ -283,16 +259,10 @@ async function up(docker, projectName, recipe, output, options) {
     if (service.healthcheck !== undefined) {
       let healthcheck = {};
       healthcheck.Test = service.healthcheck.test;
-      healthcheck.Interval = convertFancyDurationToMs(
-        service.healthcheck.interval
-      );
-      healthcheck.Timeout = convertFancyDurationToMs(
-        service.healthcheck.timeout
-      );
+      healthcheck.Interval = convertFancyDurationToMs(service.healthcheck.interval);
+      healthcheck.Timeout = convertFancyDurationToMs(service.healthcheck.timeout);
       healthcheck.Retries = service.healthcheck.retries;
-      healthcheck.StartPeriod = convertFancyDurationToMs(
-        service.healthcheck.start_period
-      );
+      healthcheck.StartPeriod = convertFancyDurationToMs(service.healthcheck.start_period);
       opts.Healthcheck = healthcheck;
     }
     if (service.command !== undefined) {
@@ -308,69 +278,30 @@ async function up(docker, projectName, recipe, output, options) {
       }
     }
 
-    var container;
-    var containerInfo;
-    let currentContainers = await docker.listContainers({
-      all: true,
-      filters: `{"label":["com.docker.compose.project=${projectName}","com.docker.compose.service=${serviceName}"]}`,
-    });
-    if (currentContainers.length) {
-      if (
-        currentContainers[0].Labels['com.docker.compose.config-hash'] ==
-          configHash &&
-        currentContainers[0].State == 'running'
-      ) {
-        containerInfo = currentContainers[0];
-        container = await docker.getContainer(containerInfo.Id)
-      } else {
-        console.debug(
-          `Removing container ${opts.name}. Container may not be running or hash might be different`
-        );
-        await docker
-          .getContainer(currentContainers[0].Id)
-          .remove({ force: true });
-        containersAfterRemove = await docker.listContainers({
-          all: true,
-          filters: `{"label":["com.docker.compose.project=${projectName}","com.docker.compose.service=${serviceName}"]}`,
-        });
+    console.debug(`Creating container ${opts.name}...`);
+    container = await docker.createContainer(opts);
 
-        if (containersAfterRemove.length) {
-          // something is wrong here, we should not have any containers for the service
-          console.warn(
-            `We were not expecting any containers for the service, but found ${containersAfterRemove.length}`
-          );
-          console.debug(containersAfterRemove);
-        }
-      }
-    }
-
-    if (!containerInfo) {
-      console.debug(`Creating container ${opts.name}...`);
-      container = await docker.createContainer(opts);
-
-      if (networksToAttach.length > 1) {
-        console.debug(`Container has networks to attach to.`)
-        let networkNames = Object.keys(networksToAttach[0]);
-        console.debug(`Disconnecting container from network ${networkNames[0]}`);
-        await findNetwork(output, networkNames[0]).disconnect({
+    if (networksToAttach.length > 1) {
+      console.debug(`Container has networks to attach to.`);
+      let networkNames = Object.keys(networksToAttach[0]);
+      console.debug(`Disconnecting container from network ${networkNames[0]}`);
+      await findNetwork(output, networkNames[0]).disconnect({
+        Container: container.id,
+      });
+      let networksToAttachSorted = tools.sortNetworksToAttach(networksToAttach);
+      for (var networkToAttach of networksToAttachSorted) {
+        let networkName = Object.keys(networkToAttach);
+        console.debug(`Connecting container to network ${networkName}`);
+        await findNetwork(output, networkName).connect({
           Container: container.id,
+          EndpointConfig: networkToAttach[networkName],
         });
-        let networksToAttachSorted =
-          tools.sortNetworksToAttach(networksToAttach);
-        for (var networkToAttach of networksToAttachSorted) {
-          let networkName = Object.keys(networkToAttach);
-          console.debug(`Connecting container to network ${networkName}`);
-          await findNetwork(output, networkName).connect({
-            Container: container.id,
-            EndpointConfig: networkToAttach[networkName],
-          });
-        }
       }
-      console.debug(`Starting container ${opts.name}...`);
-      await container.start()
     }
+    console.debug(`Starting container ${opts.name}...`);
+    await container.start();
 
-    console.debug(container)
+    console.debug(container);
     services.push(container);
   }
   return services;
@@ -388,9 +319,7 @@ var convertFancyDurationToMs = function (value) {
     return value;
   } else if (value.includes('m') && value.includes('s')) {
     let minutes = parseInt(value.substring(0, value.indexOf('m')));
-    let seconds = parseInt(
-      value.substring(value.indexOf('m') + 1, value.indexOf('s'))
-    );
+    let seconds = parseInt(value.substring(value.indexOf('m') + 1, value.indexOf('s')));
     return (minutes * 60 + seconds) * 1000 * 1000000;
   } else {
     return parseInt(value.substring(0, value.length - 2)) * 1000 * 1000000;
@@ -402,36 +331,16 @@ var extendsServices = function (service, recipe, pathScope) {
   // https://github.com/compose-spec/compose-spec/blob/master/spec.md#finding-referenced-service
   if (service.extends.file === undefined) {
     // EXTENDS OF THE SAME RECIPE
-    return buildExtendsService(
-      service,
-      service.extends.service,
-      recipe,
-      pathScope
-    );
+    return buildExtendsService(service, service.extends.service, recipe, pathScope);
   } else {
     // EXTENDS OF ANOTHER RECIPE
     var absolutePath = path.dirname(pathScope.file);
-    var extendsRecipe = yaml.load(
-      fs.readFileSync(
-        path.resolve(path.join(absolutePath, service.extends.file)),
-        'utf8'
-      )
-    );
-    return buildExtendsService(
-      service,
-      service.extends.service,
-      extendsRecipe,
-      pathScope
-    );
+    var extendsRecipe = yaml.load(fs.readFileSync(path.resolve(path.join(absolutePath, service.extends.file)), 'utf8'));
+    return buildExtendsService(service, service.extends.service, extendsRecipe, pathScope);
   }
 };
 
-var buildExtendsService = function (
-  service,
-  extendsServiceName,
-  recipe,
-  pathScope
-) {
+var buildExtendsService = function (service, extendsServiceName, recipe, pathScope) {
   var extend = false;
   var extendsRecipeServiceNames = Object.keys(recipe.services);
   for (var extendsRecipeServiceName of extendsRecipeServiceNames) {
@@ -456,9 +365,7 @@ var buildExtendsService = function (
       }
       if (oldService.extends.file) {
         var absolutePath = path.dirname(pathScope.file);
-        pathScope.file = path.resolve(
-          path.join(absolutePath, oldService.extends.file)
-        );
+        pathScope.file = path.resolve(path.join(absolutePath, oldService.extends.file));
       }
       if (extend) service = extendsServices(service, recipe, pathScope);
 
@@ -530,12 +437,7 @@ var mergingService = function (key, service, oldService) {
   };
 
   // https://github.com/compose-spec/compose-spec/blob/master/spec.md#mappings - MAPPINGS
-  if (
-    key == 'build' ||
-    key == 'deploy' ||
-    key == 'blkio_config' ||
-    key == 'logging'
-  ) {
+  if (key == 'build' || key == 'deploy' || key == 'blkio_config' || key == 'logging') {
     // one object level missing in deploy resources
     var objectMappingsKeys = Object.keys(objectMappings[key]);
     for (let objectMappingsKey of objectMappingsKeys) {
@@ -568,11 +470,7 @@ var mergingService = function (key, service, oldService) {
             serviceLine.split('=')[0] == oldServiceLine.split('=')[0] ||
             serviceLine.split(':')[0] == oldServiceLine.split(':')[0]
           ) {
-            service[key].splice(
-              service[key].indexOf(serviceLine),
-              1,
-              oldServiceLine
-            );
+            service[key].splice(service[key].indexOf(serviceLine), 1, oldServiceLine);
           }
         }
         if (!service[key].includes(oldServiceLine)) {
@@ -583,12 +481,7 @@ var mergingService = function (key, service, oldService) {
       Object.assign(service[key], oldService[key]);
     }
     // https://github.com/compose-spec/compose-spec/blob/master/spec.md#sequences - SEQUENCES
-  } else if (
-    key == 'dns' ||
-    key == 'dns_search' ||
-    key == 'env_file' ||
-    key == 'tmpfs'
-  ) {
+  } else if (key == 'dns' || key == 'dns_search' || key == 'env_file' || key == 'tmpfs') {
     if (Array.isArray(oldService[key]) || Array.isArray(service[key])) {
       if (!Array.isArray(service[key])) {
         let tempService = [];

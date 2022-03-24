@@ -1,5 +1,3 @@
-const logger = require('./logger');
-
 async function down(docker, projectName, recipe, output) {
   var networks = [];
   var networkNames = Object.keys(recipe.networks || { default: null });
@@ -16,7 +14,7 @@ async function down(docker, projectName, recipe, output) {
 }
 
 async function up(docker, projectName, recipe, output) {
-  logger.debug("Creating networks...")
+  console.debug("Creating networks...")
   var networks = [];
   var networkNames = Object.keys(recipe.networks || []);
   for (var networkName of networkNames) {
@@ -121,7 +119,6 @@ async function up(docker, projectName, recipe, output) {
       }
     }
   }
-  logger.silly(networks)
   return networks;
 }
 

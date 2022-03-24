@@ -3,10 +3,11 @@ const tar = require('tar-fs');
 const path = require('path');
 const stream = require('stream');
 const { createHash } = require('crypto');
-const logger = require('./logger');
+const logger = require('./logger').logger;
 
 module.exports = {
   buildPorts: function (servicePorts, output) {
+    logger.silly('buildPorts using ports: ' + JSON.stringify(servicePorts));
     var ports = {};
     if (typeof servicePorts[0] === 'object') {
       // LONG SYNTAX
@@ -113,6 +114,7 @@ module.exports = {
       }
       output['PortBindings'] = ports;
     }
+    logger.silly(output)
   },
 
   //ToDo: complete the compose specification
@@ -131,10 +133,6 @@ module.exports = {
 
     if (service.volumes !== undefined) {
       this.buildVolumesHostconfig(projectName, service.volumes, output);
-    }
-
-    if (service.ports !== undefined) {
-      this.buildPorts(service.ports, output);
     }
 
     if (service.autoremove !== undefined) {

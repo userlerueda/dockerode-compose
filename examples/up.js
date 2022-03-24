@@ -1,8 +1,8 @@
-var Dockerode = require('dockerode');
-var DockerodeCompose = require('../compose');
+const Dockerode = require('dockerode');
+const DockerodeCompose = require('../dist/compose').Compose;
+const logger = require('../dist/logger').logger;
 
 var docker = new Dockerode();
-const logger = require('../lib/logger')
 
 var yamlFile = './test/assets/wordpress_original.yml'
 var projectName = 'wordpress'
@@ -19,6 +19,6 @@ if (process.argv.length > 2) {
 var compose = new DockerodeCompose(docker, yamlFile, projectName);
 
 (async () => {
-  var state = await compose.up();
+  let state = await compose.up();
   logger.info(state);
 })();
