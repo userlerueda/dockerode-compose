@@ -10,7 +10,7 @@ const settings = {
   transports: [
     new transports.File({
       level: 'silly',
-      filename: 'logs/compose.log',
+      filename: 'compose.log',
     }),
   ],
 };

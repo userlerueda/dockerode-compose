@@ -22,7 +22,7 @@ export async function isServiceUpToDate(
       let currentServiceHash = currentService.Labels['com.docker.compose.config-hash'];
       logger.silly(`Current container hash: ${configHash}`);
       logger.silly(`Current service hash: ${currentServiceHash}`);
-      if (currentServiceHash === configHash) {
+      if (currentServiceHash === configHash && currentService.State === 'running') {
         isServiceUpToDate = true;
         existingContainer = docker.getContainer(currentService.Id);
       } else {
