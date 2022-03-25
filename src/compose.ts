@@ -4,7 +4,6 @@ import stream = require('stream');
 
 import { Secrets } from './secrets';
 import { Volumes } from './volumes';
-import networks = require('./networks');
 import services = require('./services');
 import tools = require('./tools');
 import Dockerode = require('dockerode');
@@ -20,6 +19,7 @@ import {
 } from './models/compose';
 import { Configs } from './configs';
 import { Images } from './images';
+import { Networks } from './networks';
 
 export class Compose {
   docker: Dockerode;
@@ -50,7 +50,7 @@ export class Compose {
 
     output.file = this.file;
     output.services = await services.down(this.docker, this.projectName, this.recipe, output, options);
-    output.networks = await networks.down(this.docker, this.projectName, this.recipe, output);
+    output.networks = await Networks.down(this.docker, this.projectName, this.recipe, output);
     output.configs = await Configs.down(this.docker, this.projectName, this.recipe, output);
     if (options.volumes) {
       output.volumes = await Volumes.down(this.docker, this.projectName, this.recipe, output);
@@ -69,7 +69,7 @@ export class Compose {
       output.secrets = await Secrets.up(this.docker, this.projectName, this.recipe, output);
       output.volumes = await Volumes.up(this.docker, this.projectName, this.recipe, output);
       output.configs = await Configs.up(this.docker, this.projectName, this.recipe, output);
-      output.networks = await networks.up(this.docker, this.projectName, this.recipe, output);
+      output.networks = await Networks.up(this.docker, this.projectName, this.recipe, output);
       output.services = await services.up(this.docker, this.projectName, this.recipe, output, options);
       return output;
     } catch (err) {
@@ -162,8 +162,8 @@ export class Compose {
     try {
       output.file = this.file;
       output.services = await services.down(this.docker, this.projectName, this.recipe, output, options);
-      output.networks = await networks.down(this.docker, this.projectName, this.recipe, output);
-      output.networks = await networks.up(this.docker, this.projectName, this.recipe, output);            
+      output.networks = await Networks.down(this.docker, this.projectName, this.recipe, output);
+      output.networks = await Networks.up(this.docker, this.projectName, this.recipe, output);            
       output.services = await services.up(this.docker, this.projectName, this.recipe, output, options);
     } catch (err) {
       throw err;
