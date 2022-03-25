@@ -2,6 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "declaration": true,
+    "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
     "noImplicitReturns": true,
@@ -9,6 +10,6 @@
     "outDir": "./dist",
     "target": "es5"
   },
-  "include": ["./src/**/*", "src/compose.ts"],
-  "exclude": ["./src/**/*.spec.ts"]
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.spec.ts"],
 }
