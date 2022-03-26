@@ -1,6 +1,6 @@
 import Dockerode = require('dockerode');
 
-const logger = require('./logger').logger;
+import { logger } from './logger';
 
 export module Networks {
   export async function down(docker, projectName, recipe, output) {

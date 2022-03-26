@@ -4,7 +4,6 @@ import stream = require('stream');
 
 import { Secrets } from './secrets';
 import { Volumes } from './volumes';
-import services = require('./services');
 import tools = require('./tools');
 import Dockerode = require('dockerode');
 import {
@@ -20,6 +19,7 @@ import {
 import { Configs } from './configs';
 import { Images } from './images';
 import { Networks } from './networks';
+import { Services } from './services';
 
 export class Compose {
   docker: Dockerode;
@@ -49,13 +49,13 @@ export class Compose {
     options = options || {};
 
     output.file = this.file;
-    output.services = await services.down(this.docker, this.projectName, this.recipe, output, options);
+    output.services = await Services.down(this.docker, this.projectName, this.recipe, output, options);
     output.networks = await Networks.down(this.docker, this.projectName, this.recipe, output);
     output.configs = await Configs.down(this.docker, this.projectName, this.recipe, output);
     if (options.volumes) {
       output.volumes = await Volumes.down(this.docker, this.projectName, this.recipe, output);
     }
-    output.services = await services.down(this.docker, this.projectName, this.recipe, output);
+    output.services = await Services.down(this.docker, this.projectName, this.recipe, output, options);
     if (options.rmi === 'all') {
       output.images = await Images.down(this.docker, this.projectName, this.recipe, output);
     }
@@ -70,7 +70,7 @@ export class Compose {
       output.volumes = await Volumes.up(this.docker, this.projectName, this.recipe, output);
       output.configs = await Configs.up(this.docker, this.projectName, this.recipe, output);
       output.networks = await Networks.up(this.docker, this.projectName, this.recipe, output);
-      output.services = await services.up(this.docker, this.projectName, this.recipe, output, options);
+      output.services = await Services.up(this.docker, this.projectName, this.recipe, output, options);
       return output;
     } catch (err) {
       throw err;
@@ -161,10 +161,10 @@ export class Compose {
     var output: ComposeOutput = {};
     try {
       output.file = this.file;
-      output.services = await services.down(this.docker, this.projectName, this.recipe, output, options);
+      output.services = await Services.down(this.docker, this.projectName, this.recipe, output, options);
       output.networks = await Networks.down(this.docker, this.projectName, this.recipe, output);
       output.networks = await Networks.up(this.docker, this.projectName, this.recipe, output);            
-      output.services = await services.up(this.docker, this.projectName, this.recipe, output, options);
+      output.services = await Services.up(this.docker, this.projectName, this.recipe, output, options);
     } catch (err) {
       throw err;
     }

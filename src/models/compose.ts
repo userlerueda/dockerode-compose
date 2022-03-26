@@ -81,7 +81,7 @@ export interface DockerComposeService {
   environment?: string[];
   hostname?: string;
   image?: string;
-  labels?: {} | [];
+  labels?: { [label: string]: string } | string[];
   ports?: DockerComposePorts[];
   restart?: string;
   volumes?: string[];

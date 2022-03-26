@@ -412,7 +412,7 @@ module.exports = {
     return output;
   },
 
-  buildNetworks: function (projectName, serviceNetworks, networksToAttach, opts) {
+  buildNetworks: function (projectName, serviceName, serviceNetworks, networksToAttach, opts) {
     logger.silly({buildNetworks: {projectName, serviceNetworks, networksToAttach, opts}})
     if (Array.isArray(serviceNetworks)) {
       for (let index = 0; index < serviceNetworks.length; index++) {

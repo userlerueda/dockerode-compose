@@ -1,10 +1,9 @@
 import { addServicePorts } from './ports';
 import { expect } from 'chai';
 import 'mocha';
-import * as _ from 'lodash';
 
 describe('addServicePorts function', () => {
-  const defaultOpts = {
+  const opts = {
     name: 'test_service_1',
     Image: 'nginx:latest',
     NetworkingConfig: {
@@ -16,11 +15,12 @@ describe('addServicePorts function', () => {
     },
   };
   const fixtures = [
-    { service: { ports: ['60203'] } },
-    { service: { ports: ['60203:60203'] } },
-    { service: { ports: ['60203-60203'] } },
+    { service: { ports: ['60203'] }, opts },
+    { service: { ports: ['60203:60203'] }, opts },
+    { service: { ports: ['60203-60203'] }, opts },
     {
       service: { ports: [{ target: 60203, host_ip: '0.0.0.0', protocol: 'tcp', published: 60203, mode: 'host' }] },
+      opts,
     },
   ];
   const output = {
@@ -40,7 +40,6 @@ describe('addServicePorts function', () => {
   for (const fixture of fixtures) {
     let service = fixture.service;
     it(`service: '${JSON.stringify(service)}' should include '${JSON.stringify(output)}'`, () => {
-      let opts = _.cloneDeep(defaultOpts);
       addServicePorts(service, opts);
       expect(opts).to.deep.include(output);
     });

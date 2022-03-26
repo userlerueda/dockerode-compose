@@ -40,3 +40,18 @@ export function fillPortArray(start: number, end: number): number[] {
     .fill(0)
     .map((_, idx) => start + idx);
 }
+
+export function getServiceNetworks(projectName: string, service: DockerComposeService): string[] {
+  let networks: string[] = [];
+  if (Array.isArray(service.networks)) {
+    // Array
+    if (service.networks.length > 0) {
+      networks = service.networks;
+    }
+  } else {
+    // Map
+    networks = Object.keys(service.networks);
+  }
+
+  return networks.map((network) => `${projectName}_${network}`);
+}

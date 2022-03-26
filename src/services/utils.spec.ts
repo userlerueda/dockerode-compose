@@ -1,12 +1,21 @@
-import { fillPortArray } from './utils';
+import { getServiceNetworks } from './utils';
 import { expect } from 'chai';
 import 'mocha';
+import * as _ from 'lodash';
 
-// describe('fillPortArray function', () => {
+describe('getServiceNetworks function', () => {
+  const projectName = 'test';
+  const fixtures = [
+    { service: { networks: ['front-tier', 'back-tier'] } },
+    { service: { networks: { 'front-tier': { aliases: ['alias1'] }, 'back-tier': { aliases: ['alias2'] } } } },
+  ];
+  const output = ['test_front-tier', 'test_back-tier'];
 
-//   it('should return hello world', () => {
-//     const result = fillPortArray(1, 2);
-//     expect(result).to.equal('Hello world!');
-//   });
-
-// });
+  for (const fixture of fixtures) {
+    let service = fixture.service;
+    it(`service: '${JSON.stringify(service)}' should include '${JSON.stringify(output)}'`, () => {
+      let serviceNetworks = getServiceNetworks(projectName, service);
+      expect(serviceNetworks).to.eql(output);
+    });
+  }
+});
