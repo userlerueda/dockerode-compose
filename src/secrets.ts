@@ -1,12 +1,12 @@
 import Dockerode = require('dockerode');
-import { ComposeOutput, ComposeRecipe } from './models/compose';
+import { ComposeOutput, DockerComposeRecipe } from './models/compose';
 import fs = require('fs');
 
 export module Secrets {
   export async function down(
     docker: Dockerode,
     projectName: string,
-    recipe: ComposeRecipe,
+    recipe: DockerComposeRecipe,
     output: ComposeOutput
   ): Promise<void> {
     return secretsDown(docker, projectName, recipe, output);
@@ -15,7 +15,7 @@ export module Secrets {
   export async function up(
     docker: Dockerode,
     projectName: string,
-    recipe: ComposeRecipe,
+    recipe: DockerComposeRecipe,
     output: ComposeOutput
   ): Promise<any[]> {
     return secretsUp(docker, projectName, recipe, output);
@@ -25,7 +25,7 @@ export module Secrets {
 async function secretsUp(
   docker: Dockerode,
   projectName: string,
-  recipe: ComposeRecipe,
+  recipe: DockerComposeRecipe,
   output: ComposeOutput
 ) {
   var secrets = [];
@@ -48,7 +48,7 @@ async function secretsUp(
 async function secretsDown(
   docker: Dockerode,
   projectName: string,
-  recipe: ComposeRecipe,
+  recipe: DockerComposeRecipe,
   output: ComposeOutput
 ) {
   console.log('Not implemented');

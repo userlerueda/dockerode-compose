@@ -35,7 +35,7 @@ export interface ComposeOutput {
   volumes?: any[];
 }
 
-export interface ComposeRecipe {
+export interface DockerComposeRecipe {
   version?: string;
   configs?: DockerComposeConfigs;
   services?: DockerComposeServices;
@@ -85,6 +85,7 @@ export interface DockerComposeService {
   ports?: DockerComposePorts[];
   restart?: string;
   volumes?: string[];
+  depends_on?: string[] | { [serviceName: string]: { condition?: string } };
 }
 
 export type DockerComposePorts = string | DockerComposePortsLongSyntax;

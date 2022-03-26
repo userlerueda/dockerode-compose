@@ -12,7 +12,7 @@ import {
   ComposeOutput,
   ComposePullArgs,
   ComposePullOptions,
-  ComposeRecipe,
+  DockerComposeRecipe,
   ComposeRestartOptions,
   ComposeUpOptions,
 } from './models/compose';
@@ -25,7 +25,7 @@ export class Compose {
   docker: Dockerode;
   file: string;
   projectName: string;
-  recipe: ComposeRecipe;
+  recipe: DockerComposeRecipe;
 
   constructor(dockerode: Dockerode, file: string, projectName: string) {
     this.docker = dockerode;

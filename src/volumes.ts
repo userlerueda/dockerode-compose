@@ -1,12 +1,12 @@
 import Dockerode = require('dockerode');
 import { logger } from './logger';
-import { ComposeOutput, ComposeRecipe } from './models/compose';
+import { ComposeOutput, DockerComposeRecipe } from './models/compose';
 
 export module Volumes {
   export async function down(
     docker: Dockerode,
     projectName: string,
-    recipe: ComposeRecipe,
+    recipe: DockerComposeRecipe,
     output: ComposeOutput,
   ): Promise<ComposeOutput['volumes']> {
     logger.info('Deleting volumes...');
@@ -25,7 +25,7 @@ export module Volumes {
   export async function up(
     docker: Dockerode,
     projectName: string,
-    recipe: ComposeRecipe,
+    recipe: DockerComposeRecipe,
     output: ComposeOutput,
   ): Promise<ComposeOutput['volumes']> {
     logger.info('Creating volumes...');

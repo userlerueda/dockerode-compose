@@ -11,10 +11,10 @@ import Dockerode = require('dockerode');
 
 import { logger } from './logger';
 import { ContainerCreateOptions } from './models/docker';
-import { ComposeRecipe, ComposeOutput, ComposeRestartOptions, ComposeUpOptions } from './models/compose';
+import { DockerComposeRecipe, ComposeOutput, ComposeRestartOptions, ComposeUpOptions } from './models/compose';
 
 export module Services {
-  export async function down(docker: Dockerode, projectName: string, recipe: ComposeRecipe, output: ComposeOutput, options: ComposeUpOptions) {
+  export async function down(docker: Dockerode, projectName: string, recipe: DockerComposeRecipe, output: ComposeOutput, options: ComposeUpOptions) {
     var services = [];
     var serviceNames = tools.sortServices(recipe);
     for (var serviceName of serviceNames) {
@@ -31,7 +31,7 @@ export module Services {
     return services;
   }
 
-  export async function up(docker: Dockerode, projectName: string, recipe: ComposeRecipe, output: ComposeOutput, options: ComposeUpOptions) {
+  export async function up(docker: Dockerode, projectName: string, recipe: DockerComposeRecipe, output: ComposeOutput, options: ComposeUpOptions) {
     logger.info('Creating containers...');
     var services = [];
     var serviceNames = tools.sortServices(recipe);
@@ -303,6 +303,7 @@ export module Services {
         await attachedNetwork.disconnect({
           Container: container.id,
         });
+        logger.debug(`networksToAttach: ${JSON.stringify(networksToAttach)}`);
         let networksToAttachSorted = tools.sortNetworksToAttach(networksToAttach);
         for (const networkToAttach of networksToAttachSorted) {
           let networkName = Object.keys(networkToAttach)[0];

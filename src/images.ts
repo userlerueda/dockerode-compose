@@ -1,13 +1,13 @@
 import Dockerode = require('dockerode');
 import { logger } from './logger';
-import { ComposeOutput, ComposeRecipe } from './models/compose';
+import { ComposeOutput, DockerComposeRecipe } from './models/compose';
 import fs = require('fs');
 
 export module Images {
   export async function down(
     docker: Dockerode,
     projectName: string,
-    recipe: ComposeRecipe,
+    recipe: DockerComposeRecipe,
     output: ComposeOutput,
   ): Promise<ComposeOutput['images']> {
     logger.info('Deleting images...');
