@@ -1,6 +1,6 @@
 import Dockerode = require('dockerode');
 import { logger } from '../logger';
-import { DockerComposeService } from '../models/compose';
+import { DockerComposeService } from '../../index.d';
 
 export async function isServiceUpToDate(
   docker: Dockerode,

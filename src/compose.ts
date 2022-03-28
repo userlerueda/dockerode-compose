@@ -1,7 +1,6 @@
 import yaml = require('js-yaml');
 import fs = require('fs');
 import stream = require('stream');
-
 import { Secrets } from './secrets';
 import { Volumes } from './volumes';
 import tools = require('./tools');
@@ -15,7 +14,7 @@ import {
   DockerComposeRecipe,
   ComposeRestartOptions,
   ComposeUpOptions,
-} from './models/compose';
+} from '../index.d';
 import { Configs } from './configs';
 import { Images } from './images';
 import { Networks } from './networks';

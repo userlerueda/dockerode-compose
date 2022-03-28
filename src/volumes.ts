@@ -1,6 +1,6 @@
 import Dockerode = require('dockerode');
 import { logger } from './logger';
-import { ComposeOutput, DockerComposeRecipe } from './models/compose';
+import { ComposeOutput, DockerComposeRecipe } from '../index.d';
 
 export module Volumes {
   export async function down(

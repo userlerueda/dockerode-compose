@@ -11,7 +11,7 @@ import Dockerode = require('dockerode');
 
 import { logger } from './logger';
 import { ContainerCreateOptions } from './models/docker';
-import { DockerComposeRecipe, ComposeOutput, ComposeRestartOptions, ComposeUpOptions, ComposeDownOptions } from './models/compose';
+import { DockerComposeRecipe, ComposeOutput, ComposeRestartOptions, ComposeUpOptions, ComposeDownOptions } from '../index.d';
 
 export module Services {
   export async function down(docker: Dockerode, projectName: string, recipe: DockerComposeRecipe, output: ComposeOutput, options: ComposeDownOptions) {

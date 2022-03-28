@@ -92,9 +92,9 @@ declare namespace DockerodeCompose {
           [label: string]: string;
         }
       | string[];
-    ports?: DockerComposePorts[];
+    ports?: DockerComposePort[];
     restart?: string;
-    volumes?: DockerComposeServiceVolumes[];
+    volumes?: DockerComposeServiceVolume[];
     depends_on?:
       | string[]
       | {
@@ -149,9 +149,9 @@ declare namespace DockerodeCompose {
     blkio_config?: any;
     logging?: any;
   }
-  type DockerComposePorts = string | DockerComposePortsLongSyntax;
-  type DockerComposeServiceVolumes = string | DockerComposeServiceVolumesLongSyntax;
-  interface DockerComposePortsLongSyntax {
+  type DockerComposePort = string | DockerComposePortLongSyntax;
+  type DockerComposeServiceVolume = string | DockerComposeServiceVolumesLongSyntax;
+  interface DockerComposePortLongSyntax {
     target: number;
     published: number;
     protocol: string;

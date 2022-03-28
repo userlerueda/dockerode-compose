@@ -5,7 +5,7 @@ import * as stream from 'stream';
 import { createHash } from 'crypto';
 import { logger } from './logger';
 import { stdout } from 'process';
-import { ComposeOutput, ComposeUpOptions, DockerComposeRecipe, DockerComposeService } from './models/compose';
+import { ComposeOutput, ComposeUpOptions, DockerComposeRecipe, DockerComposeService } from '../index.d';
 import * as Dockerode from 'dockerode';
 import { ContainerCreateOptions } from './models/docker';
 

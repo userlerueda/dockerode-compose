@@ -1,4 +1,4 @@
-import { ComposeOutput, DockerComposeRecipe } from "./models/compose";
+import { ComposeOutput, DockerComposeRecipe } from "../index.d";
 
 export function getImages(recipe: DockerComposeRecipe) {
   var images = [];

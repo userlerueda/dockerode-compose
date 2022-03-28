@@ -74,9 +74,9 @@ export interface DockerComposeService {
     labels?: {
         [label: string]: string;
     } | string[];
-    ports?: DockerComposePorts[];
+    ports?: DockerComposeServicePort[];
     restart?: string;
-    volumes?: DockerComposeServiceVolumes[];
+    volumes?: DockerComposeServiceVolume[];
     depends_on?: string[] | {
         [serviceName: string]: {
             condition?: string;
@@ -127,15 +127,15 @@ export interface DockerComposeService {
     blkio_config?: any;
     logging?: any;
 }
-export declare type DockerComposePorts = string | DockerComposePortsLongSyntax;
-export declare type DockerComposeServiceVolumes = string | DockerComposeServiceVolumesLongSyntax;
-export interface DockerComposePortsLongSyntax {
+export declare type DockerComposeServicePort = string | DockerComposePortLongSyntax;
+export declare type DockerComposeServiceVolume = string | DockerComposeServiceVolumeLongSyntax;
+export interface DockerComposePortLongSyntax {
     target: number;
     published: number;
     protocol: string;
     mode: string;
 }
-export interface DockerComposeServiceVolumesLongSyntax {
+export interface DockerComposeServiceVolumeLongSyntax {
     type: 'volume' | 'bind' | 'tmpfs' | 'npipe';
     source?: string;
     target?: string;

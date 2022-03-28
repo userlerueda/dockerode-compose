@@ -1,5 +1,5 @@
 import Dockerode = require('dockerode');
-import { ComposeOutput, DockerComposeRecipe } from './models/compose';
+import { ComposeOutput, DockerComposeRecipe } from './../index.d';
 import fs = require('fs');
 
 export module Secrets {
