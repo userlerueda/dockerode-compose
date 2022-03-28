@@ -19,11 +19,11 @@ export interface ComposePullOptions {
   services?: string;
 }
 
-export interface ComposeRestartOptions {
-  volumes?: string;
-}
+export interface ComposeRestartOptions extends ComposeDownOptions, ComposeUpOptions {}
 
-export interface ComposeUpOptions {}
+export interface ComposeUpOptions {
+  verbose?: boolean;
+}
 
 export interface ComposeOutput {
   secrets?: any[];
@@ -84,17 +84,67 @@ export interface DockerComposeService {
   labels?: { [label: string]: string } | string[];
   ports?: DockerComposePorts[];
   restart?: string;
-  volumes?: string[];
+  volumes?: DockerComposeServiceVolumes[];
   depends_on?: string[] | { [serviceName: string]: { condition?: string } };
+  cpu_count?: number;
+  cpu_percent?: number;
+  cpu_shares?: number;
+  cpu_period?: number;
+  cpu_quota?: number;
+  cpu_rt_period?: number;
+  cpu_rt_runtime?: number;
+  cpuset?: string;
+  cap_add?: string[];
+  cap_drop?: string[];
+  cgroup_parent?: string;
+  device_cgroup_rules?: string[];
+  dns?: string[];
+  dns_opt?: string[];
+  dns_search?: string[] | string;
+  extra_hosts?: string[];
+  group_add?: string[];
+  init?: boolean;
+  ipc_mode?: string;
+  ipc?: string;
+  isolation?: string;
+  mem_swappiness?: number;
+  oom_kill_disable?: boolean;
+  oom_score_adj?: number;
+  pid?: string;
+  pids_limit?: number;
+  privileged?: boolean;
+  read_only?: boolean;
+  runtime?: string;
+  security_opt?: string[];
+  shm_size?: number;
+  storage_opt?: { [storageOpt: string]: string };
+  sysctls?: { [sysctl: string]: string } | string[];
+  userns_mode?: string;
+  tmpfs?: string[] | string;
+  ulimits?: { [ulimit: string]: any };
+  blkio_config?: any;
+  logging?: any;
 }
 
 export type DockerComposePorts = string | DockerComposePortsLongSyntax;
+export type DockerComposeServiceVolumes = string | DockerComposeServiceVolumesLongSyntax;
 
 export interface DockerComposePortsLongSyntax {
   target: number;
   published: number;
   protocol: string;
   mode: string;
+}
+
+export interface DockerComposeServiceVolumesLongSyntax {
+  type: 'volume' | 'bind' | 'tmpfs' | 'npipe';
+  source?: string;
+  target?: string;
+  read_only?: boolean;
+  bind?: { propagation?: string; create_host_path?: boolean; selinux?: 'z' | 'Z' };
+  volume?: { nocopy?: boolean };
+  tmpfs?: { size?: number | string };
+  consistency?: string;
 }
 
 export type Callback<T> = (error?: any, result?: T) => void;

@@ -11,10 +11,10 @@ import Dockerode = require('dockerode');
 
 import { logger } from './logger';
 import { ContainerCreateOptions } from './models/docker';
-import { DockerComposeRecipe, ComposeOutput, ComposeRestartOptions, ComposeUpOptions } from './models/compose';
+import { DockerComposeRecipe, ComposeOutput, ComposeRestartOptions, ComposeUpOptions, ComposeDownOptions } from './models/compose';
 
 export module Services {
-  export async function down(docker: Dockerode, projectName: string, recipe: DockerComposeRecipe, output: ComposeOutput, options: ComposeUpOptions) {
+  export async function down(docker: Dockerode, projectName: string, recipe: DockerComposeRecipe, output: ComposeOutput, options: ComposeDownOptions) {
     var services = [];
     var serviceNames = tools.sortServices(recipe);
     for (var serviceName of serviceNames) {
