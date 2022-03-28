@@ -1,42 +1,26 @@
-/// <reference types="node" />
-
-import * as Dockerode from 'dockerode';
-
-declare namespace DockerodeCompose {
-  class Compose {
-    docker: Dockerode;
-    file: string;
-    projectName: string;
-    recipe: DockerComposeRecipe;
-    constructor(dockerode: Dockerode, file: string, projectName: string);
-    down(options: ComposeDownOptions): Promise<ComposeOutput>;
-    up(options: ComposeUpOptions): Promise<ComposeOutput>;
-    pullWithCallback(serviceName?: string, options?: ComposePullOptions, callback?: Callback<Dockerode.Image>): void;
-    pull(serviceN: any, options: ComposePullOptions): Promise<any[]>;
-    restart(options: ComposeRestartOptions): Promise<ComposeOutput>;
-  }
-
-  interface ComposeDownOptions {
+import Dockerode = require('dockerode');
+export interface ComposeDownOptions {
     rmi?: 'all' | 'local';
     'remove-orphans'?: boolean;
     v?: string;
     volumes?: string;
-  }
-  interface ComposePullArgs {
+}
+export interface ComposePullArgs {
     serviceName?: string;
     options?: ComposePullOptions;
     callback?: Callback<any>;
-  }
-  interface ComposePullOptions {
+}
+export interface ComposePullOptions {
     verbose?: any;
     streams?: any;
     services?: string;
-  }
-  interface ComposeRestartOptions extends ComposeDownOptions, ComposeUpOptions {}
-  interface ComposeUpOptions {
+}
+export interface ComposeRestartOptions extends ComposeDownOptions, ComposeUpOptions {
+}
+export interface ComposeUpOptions {
     verbose?: boolean;
-  }
-  interface ComposeOutput {
+}
+export interface ComposeOutput {
     secrets?: any[];
     configs?: any[];
     file?: string;
@@ -44,27 +28,27 @@ declare namespace DockerodeCompose {
     networks?: any[];
     services?: any[];
     volumes?: any[];
-  }
-  interface DockerComposeRecipe {
+}
+export interface DockerComposeRecipe {
     version?: string;
     configs?: DockerComposeConfigs;
     services?: DockerComposeServices;
     networks?: any;
     volumes?: any;
     secrets?: any;
-  }
-  interface DockerComposeConfig {
+}
+export interface DockerComposeConfig {
     file?: string;
     external?: boolean;
     name: string;
-  }
-  interface DockerComposeConfigs {
+}
+export interface DockerComposeConfigs {
     [serviceName: string]: DockerComposeConfig;
-  }
-  interface DockerComposeServices {
+}
+export interface DockerComposeServices {
     [serviceName: string]: DockerComposeService;
-  }
-  interface DockerComposeService {
+}
+export interface DockerComposeService {
     autoremove?: boolean;
     entrypoint?: any;
     healthcheck?: any;
@@ -87,21 +71,17 @@ declare namespace DockerodeCompose {
     environment?: string[];
     hostname?: string;
     image?: string;
-    labels?:
-      | {
-          [label: string]: string;
-        }
-      | string[];
+    labels?: {
+        [label: string]: string;
+    } | string[];
     ports?: DockerComposePorts[];
     restart?: string;
     volumes?: DockerComposeServiceVolumes[];
-    depends_on?:
-      | string[]
-      | {
-          [serviceName: string]: {
+    depends_on?: string[] | {
+        [serviceName: string]: {
             condition?: string;
-          };
         };
+    };
     cpu_count?: number;
     cpu_percent?: number;
     cpu_shares?: number;
@@ -134,48 +114,43 @@ declare namespace DockerodeCompose {
     security_opt?: string[];
     shm_size?: number;
     storage_opt?: {
-      [storageOpt: string]: string;
+        [storageOpt: string]: string;
     };
-    sysctls?:
-      | {
-          [sysctl: string]: string;
-        }
-      | string[];
+    sysctls?: {
+        [sysctl: string]: string;
+    } | string[];
     userns_mode?: string;
     tmpfs?: string[] | string;
     ulimits?: {
-      [ulimit: string]: any;
+        [ulimit: string]: any;
     };
     blkio_config?: any;
     logging?: any;
-  }
-  type DockerComposePorts = string | DockerComposePortsLongSyntax;
-  type DockerComposeServiceVolumes = string | DockerComposeServiceVolumesLongSyntax;
-  interface DockerComposePortsLongSyntax {
+}
+export declare type DockerComposePorts = string | DockerComposePortsLongSyntax;
+export declare type DockerComposeServiceVolumes = string | DockerComposeServiceVolumesLongSyntax;
+export interface DockerComposePortsLongSyntax {
     target: number;
     published: number;
     protocol: string;
     mode: string;
-  }
-  interface DockerComposeServiceVolumesLongSyntax {
+}
+export interface DockerComposeServiceVolumesLongSyntax {
     type: 'volume' | 'bind' | 'tmpfs' | 'npipe';
     source?: string;
     target?: string;
     read_only?: boolean;
     bind?: {
-      propagation?: string;
-      create_host_path?: boolean;
-      selinux?: 'z' | 'Z';
+        propagation?: string;
+        create_host_path?: boolean;
+        selinux?: 'z' | 'Z';
     };
     volume?: {
-      nocopy?: boolean;
+        nocopy?: boolean;
     };
     tmpfs?: {
-      size?: number | string;
+        size?: number | string;
     };
     consistency?: string;
-  }
-  type Callback<T> = (error?: any, result?: T) => void;
 }
-
-export = DockerodeCompose;
+export declare type Callback<T> = (error?: any, result?: T) => void;
