@@ -9,7 +9,7 @@
     "noImplicitAny": false,
     "noImplicitReturns": true,
     "sourceMap": true,
-    "outDir": "lib-esm",
+    "outDir": "./dist/lib-esm",
     "target": "es5"
   },
   "include": ["src/**/*"],
