@@ -1,4 +1,4 @@
-import Dockerode = require('dockerode');
+import * as Dockerode from "dockerode";
 
 interface HostConfig extends Dockerode.HostConfig {
   DnsSearch?: string[] | undefined;

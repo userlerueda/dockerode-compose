@@ -1,10 +1,10 @@
-import Dockerode = require('dockerode');
-import { logger } from '../logger';
-import { DockerComposeService } from '../../index.d';
-import { fillPortArray } from './utils';
-import * as _ from 'lodash';
+import * as Dockerode from "dockerode";
+import { DockerComposeService } from "../models/dockerCompose";
 
-export function addServiceLabels(service: DockerComposeService, opts: Dockerode.ContainerCreateOptions): void {
+export function addServiceLabels(
+  service: DockerComposeService,
+  opts: Dockerode.ContainerCreateOptions
+): void {
   // https://github.com/compose-spec/compose-spec/blob/master/spec.md#labels
   if (Array.isArray(service.labels)) {
     // Array
@@ -12,9 +12,9 @@ export function addServiceLabels(service: DockerComposeService, opts: Dockerode.
     if (service.labels.length > 0) {
       // Array with values
       for (const label of service.labels) {
-        let p = label.split('=');
+        let p = label.split("=");
         if (p[1] === undefined) {
-          p[1] = '';
+          p[1] = "";
         }
         labels[p[0]] = p[1];
       }

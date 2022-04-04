@@ -1,4 +1,4 @@
-import { ComposeOutput, DockerComposeRecipe } from "../index.d";
+import { ComposeOutput, DockerComposeRecipe } from "./models/dockerCompose";
 
 export function getImages(recipe: DockerComposeRecipe) {
   var images = [];
@@ -19,7 +19,7 @@ export function sortServices(recipe: DockerComposeRecipe) {
     for (var serviceName of serviceNames) {
       if (order.indexOf(serviceName) === -1) {
         let depends_on = recipe.services[serviceName].depends_on;
-        if (typeof depends_on === 'object' && !Array.isArray(depends_on)) {
+        if (typeof depends_on === "object" && !Array.isArray(depends_on)) {
           // if we are using Long Syntax https://github.com/compose-spec/compose-spec/blob/master/spec.md#long-syntax-1
           // we will need to get keys from object and use them as dependencies
           depends_on = Object.keys(depends_on);
@@ -30,7 +30,9 @@ export function sortServices(recipe: DockerComposeRecipe) {
   }
   return order;
 }
-export function sortNetworksToAttach(networksToAttach: ComposeOutput['networks']) {
+export function sortNetworksToAttach(
+  networksToAttach: ComposeOutput["networks"]
+) {
   var networksToAttachSorted = [];
   for (let i = 0; i < networksToAttach.length; i++) {
     let networkName = Object.keys(networksToAttach[i])[0];
@@ -40,9 +42,15 @@ export function sortNetworksToAttach(networksToAttach: ComposeOutput['networks']
       let aux = 0;
       for (let j = 0; j < networksToAttachSorted.length; j++) {
         let networkNameSorted = Object.keys(networksToAttachSorted[j])[0];
-        if (networksToAttachSorted[j][networkNameSorted].priority > networksToAttach[i][networkName].priority) {
+        if (
+          networksToAttachSorted[j][networkNameSorted].priority >
+          networksToAttach[i][networkName].priority
+        ) {
           aux += j + 1;
-        } else if (networksToAttachSorted[j][networkNameSorted].priority < networksToAttach[i][networkName].priority) {
+        } else if (
+          networksToAttachSorted[j][networkNameSorted].priority <
+          networksToAttach[i][networkName].priority
+        ) {
           aux += j - 1;
         } else {
           aux += j + 1;
@@ -55,7 +63,11 @@ export function sortNetworksToAttach(networksToAttach: ComposeOutput['networks']
   return networksToAttachSorted;
 }
 
-function insertService(serviceName: string, depends_on: string[], order: any[]) {
+function insertService(
+  serviceName: string,
+  depends_on: string[],
+  order: any[]
+) {
   var position = -1;
   for (var serviceDep of depends_on) {
     var p = order.indexOf(serviceDep);

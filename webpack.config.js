@@ -1,31 +1,54 @@
 const path = require('path');
+const webpack = require('webpack');
+const TypescriptDeclarationPlugin = require('typescript-declaration-webpack-plugin');
 
-module.exports = {
+const commonConfig = {
   entry: './src/compose.ts',
-  output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-  },
-  devtool: 'inline-source-map',
-  resolve: {
-    extensions: ['', '.webpack.js', '.web.js', '.ts', '.tsx', '.js'],
-    fallback: {
-      constants: false,
-      crypto: false,
-      fs: false,
-      http: false,
-      https: false,
-      os: false,
-      path: false,
-      stream: false,
-      util: false,
-      zlib: false,
-    },
-  },
+  devtool: 'source-map',
+  mode: 'production',
   module: {
     rules: [
-      { test: /\.tsx?$/, loader: 'ts-loader' },
-      { test: /\.js$/, loader: 'source-map-loader' },
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
     ],
   },
+  optimization: {
+    minimize: false,
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
+  },
 };
+
+// const nodeMinConfig = {
+//   ...commonConfig,
+//   optimization: {
+//     minimize: true,
+//   },
+//   output: {
+//     path: path.resolve(__dirname, 'dist'),
+//     filename: 'dockerode-compose.bundle.min.js',
+//     libraryTarget: 'umd',
+//     library: 'DockerodeCompose',
+//     umdNamedDefine: true,
+//   },
+//   target: 'node',
+// };
+
+const nodeConfig = {
+  ...commonConfig,
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'dockerode-compose.bundle.js',
+    libraryTarget: 'umd',
+    library: 'DockerodeCompose',
+    umdNamedDefine: true,
+  },
+  plugins: [new TypescriptDeclarationPlugin({ out: 'dockerode-compose.bundle.d.ts' })],
+  target: 'node',
+};
+
+module.exports = [nodeConfig];

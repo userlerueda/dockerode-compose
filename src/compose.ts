@@ -1,24 +1,24 @@
-import yaml = require('js-yaml');
-import fs = require('fs');
-import stream = require('stream');
-import { Secrets } from './secrets';
-import { Volumes } from './volumes';
-import tools = require('./tools');
-import Dockerode = require('dockerode');
+import * as fs from "fs";
+import * as yaml from "js-yaml";
+import { Configs } from "./configs";
+import { Images } from "./images";
 import {
   Callback,
   ComposeDownOptions,
   ComposeOutput,
   ComposePullArgs,
   ComposePullOptions,
-  DockerComposeRecipe,
   ComposeRestartOptions,
   ComposeUpOptions,
-} from '../index.d';
-import { Configs } from './configs';
-import { Images } from './images';
-import { Networks } from './networks';
-import { Services } from './services';
+  DockerComposeRecipe,
+} from "./models/dockerCompose";
+import { Networks } from "./networks";
+import { Secrets } from "./secrets";
+import { Services } from "./services";
+import { Volumes } from "./volumes";
+import * as stream from "stream";
+import * as tools from "./tools";
+import * as Dockerode from "dockerode";
 
 export class Compose {
   docker: Dockerode;
@@ -30,68 +30,133 @@ export class Compose {
     this.docker = dockerode;
 
     if (file === undefined || projectName === undefined) {
-      throw new Error('please specify a file and a project name');
+      throw new Error("please specify a file and a project name");
     }
 
     this.file = file;
     this.projectName = projectName;
 
     try {
-      this.recipe = yaml.load(fs.readFileSync(file, 'utf8'));
+      this.recipe = yaml.load(fs.readFileSync(file, "utf8"));
     } catch (e) {
       throw e;
     }
   }
 
-  async down(options: ComposeDownOptions): Promise<ComposeOutput> {
+  async down(options?: ComposeDownOptions): Promise<ComposeOutput> {
     var output: ComposeOutput = {};
     options = options || {};
 
     output.file = this.file;
-    output.services = await Services.down(this.docker, this.projectName, this.recipe, output, options);
-    output.networks = await Networks.down(this.docker, this.projectName, this.recipe, output);
-    output.configs = await Configs.down(this.docker, this.projectName, this.recipe, output);
+    output.services = await Services.down(
+      this.docker,
+      this.projectName,
+      this.recipe,
+      output,
+      options
+    );
+    output.networks = await Networks.down(
+      this.docker,
+      this.projectName,
+      this.recipe,
+      output
+    );
+    output.configs = await Configs.down(
+      this.docker,
+      this.projectName,
+      this.recipe,
+      output
+    );
     if (options.volumes) {
-      output.volumes = await Volumes.down(this.docker, this.projectName, this.recipe, output);
+      output.volumes = await Volumes.down(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output
+      );
     }
-    output.services = await Services.down(this.docker, this.projectName, this.recipe, output, options);
-    if (options.rmi === 'all') {
-      output.images = await Images.down(this.docker, this.projectName, this.recipe, output);
+    output.services = await Services.down(
+      this.docker,
+      this.projectName,
+      this.recipe,
+      output,
+      options
+    );
+    if (options.rmi === "all") {
+      output.images = await Images.down(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output
+      );
     }
     return output;
   }
 
-  async up(options: ComposeUpOptions): Promise<ComposeOutput> {
+  async up(options?: ComposeUpOptions): Promise<ComposeOutput> {
     var output: ComposeOutput = {};
     try {
       output.file = this.file;
-      output.secrets = await Secrets.up(this.docker, this.projectName, this.recipe, output);
-      output.volumes = await Volumes.up(this.docker, this.projectName, this.recipe, output);
-      output.configs = await Configs.up(this.docker, this.projectName, this.recipe, output);
-      output.networks = await Networks.up(this.docker, this.projectName, this.recipe, output);
-      output.services = await Services.up(this.docker, this.projectName, this.recipe, output, options);
+      output.secrets = await Secrets.up(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output
+      );
+      output.volumes = await Volumes.up(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output
+      );
+      output.configs = await Configs.up(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output
+      );
+      output.networks = await Networks.up(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output
+      );
+      output.services = await Services.up(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output,
+        options
+      );
       return output;
     } catch (err) {
       throw err;
     }
   }
 
-  pullWithCallback(serviceName?: string, options?: ComposePullOptions, callback?: Callback<Dockerode.Image>): void {
+  pullWithCallback(
+    serviceName?: string,
+    options?: ComposePullOptions,
+    callback?: Callback<Dockerode.Image>
+  ): void {
     var args: ComposePullArgs = {
       serviceName: undefined,
       options: {},
       callback: undefined,
     };
-    if (typeof serviceName === 'string') {
-      if (typeof options === 'object') {
+    if (typeof serviceName === "string") {
+      if (typeof options === "object") {
         // pull(serviceName, opts)
         args.serviceName = serviceName;
         args.options = options;
-      } else if (typeof options === 'function') {
+      } else if (typeof options === "function") {
         // pull(serviceName, callback)
         args.serviceName = serviceName;
         args.callback = options;
-      } else if (typeof options === 'object' && typeof callback === 'function') {
+      } else if (
+        typeof options === "object" &&
+        typeof callback === "function"
+      ) {
         // pull(serviceName, opts, callback)
         args.serviceName = serviceName;
         args.options = options;
@@ -100,8 +165,8 @@ export class Compose {
         // pull(serviceName)
         args.serviceName = serviceName;
       }
-    } else if (typeof serviceName === 'object') {
-      if (typeof options === 'function') {
+    } else if (typeof serviceName === "object") {
+      if (typeof options === "function") {
         // pull(opts, callback)
         args.options = serviceName;
         args.callback = options;
@@ -109,7 +174,7 @@ export class Compose {
         // pull(opts)
         args.options = serviceName;
       }
-    } else if (typeof serviceName === 'function') {
+    } else if (typeof serviceName === "function") {
       // pull(callback)
       args.callback = serviceName;
     } else {
@@ -130,7 +195,10 @@ export class Compose {
   async pull(serviceN: any, options: ComposePullOptions) {
     options = options || {};
     var streams = [];
-    var serviceNames = serviceN === undefined || serviceN === null ? tools.sortServices(this.recipe) : [serviceN];
+    var serviceNames =
+      serviceN === undefined || serviceN === null
+        ? tools.sortServices(this.recipe)
+        : [serviceN];
     for (var serviceName of serviceNames) {
       var service = this.recipe.services[serviceName];
       try {
@@ -147,7 +215,7 @@ export class Compose {
           } else {
             streami.pipe(new stream.PassThrough());
           }
-          await new Promise((fulfill) => streami.once('end', fulfill));
+          await new Promise((fulfill) => streami.once("end", fulfill));
         }
       } catch (e) {
         throw e;
@@ -156,14 +224,36 @@ export class Compose {
     return streams;
   }
 
-  async restart(options: ComposeRestartOptions): Promise<ComposeOutput> {
+  async restart(options?: ComposeRestartOptions): Promise<ComposeOutput> {
     var output: ComposeOutput = {};
     try {
       output.file = this.file;
-      output.services = await Services.down(this.docker, this.projectName, this.recipe, output, options);
-      output.networks = await Networks.down(this.docker, this.projectName, this.recipe, output);
-      output.networks = await Networks.up(this.docker, this.projectName, this.recipe, output);            
-      output.services = await Services.up(this.docker, this.projectName, this.recipe, output, options);
+      output.services = await Services.down(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output,
+        options
+      );
+      output.networks = await Networks.down(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output
+      );
+      output.networks = await Networks.up(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output
+      );
+      output.services = await Services.up(
+        this.docker,
+        this.projectName,
+        this.recipe,
+        output,
+        options
+      );
     } catch (err) {
       throw err;
     }

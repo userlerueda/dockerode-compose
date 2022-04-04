@@ -1,12 +1,11 @@
-import Dockerode = require('dockerode');
-import { logger } from '../logger';
-import { DockerComposeService } from '../../index.d';
+import * as Dockerode from "dockerode";
+import { DockerComposeService } from "../models/dockerCompose";
 
 export async function isServiceUpToDate(
   docker: Dockerode,
   projectName: string,
   serviceName: string,
-  configHash: string,
+  configHash: string
 ) {
   let isServiceUpToDate = false;
 
@@ -17,16 +16,24 @@ export async function isServiceUpToDate(
 
   let existingContainer: Dockerode.Container;
   if (currentServices.length !== 0) {
-    logger.debug(`Found '${currentServices.length}' containers for service: ${serviceName}`);
+    console.debug(
+      `Found '${currentServices.length}' containers for service: ${serviceName}`
+    );
     for (const currentService of currentServices) {
-      let currentServiceHash = currentService.Labels['com.docker.compose.config-hash'];
-      logger.silly(`Current container hash: ${configHash}`);
-      logger.silly(`Current service hash: ${currentServiceHash}`);
-      if (currentServiceHash === configHash && currentService.State === 'running') {
+      let currentServiceHash =
+        currentService.Labels["com.docker.compose.config-hash"];
+      console.debug(`Current container hash: ${configHash}`);
+      console.debug(`Current service hash: ${currentServiceHash}`);
+      if (
+        currentServiceHash === configHash &&
+        currentService.State === "running"
+      ) {
         isServiceUpToDate = true;
         existingContainer = docker.getContainer(currentService.Id);
       } else {
-        logger.debug(`Container '${currentService.Id}' is not up to date. Recreating...`);
+        console.debug(
+          `Container '${currentService.Id}' is not up to date. Recreating...`
+        );
         await docker.getContainer(currentService.Id).remove({ force: true });
       }
     }
@@ -41,7 +48,10 @@ export function fillPortArray(start: number, end: number): number[] {
     .map((_, idx) => start + idx);
 }
 
-export function getServiceNetworks(projectName: string, service: DockerComposeService): string[] {
+export function getServiceNetworks(
+  projectName: string,
+  service: DockerComposeService
+): string[] {
   let networks: string[] = [];
   if (Array.isArray(service.networks)) {
     // Array

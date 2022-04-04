@@ -1,6 +1,6 @@
-import Dockerode = require('dockerode');
-import { ComposeOutput, DockerComposeRecipe } from './../index.d';
-import fs = require('fs');
+import * as Dockerode from "dockerode";
+import { ComposeOutput, DockerComposeRecipe } from "./models/dockerCompose";
+import * as fs from "fs";
 
 export module Secrets {
   export async function down(
@@ -34,8 +34,8 @@ async function secretsUp(
     var secret = recipe.secrets[secretName];
     if (secret.external === true) continue;
     var opts = {
-      Name: projectName + '_' + secretName,
-      Data: fs.readFileSync(secret.file, 'utf8'),
+      Name: projectName + "_" + secretName,
+      Data: fs.readFileSync(secret.file, "utf8"),
     };
     if (secret.name !== undefined) {
       opts.Name = secretName;
@@ -51,5 +51,5 @@ async function secretsDown(
   recipe: DockerComposeRecipe,
   output: ComposeOutput
 ) {
-  console.log('Not implemented');
+  console.log("Not implemented");
 }
