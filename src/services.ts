@@ -2,7 +2,6 @@ import * as tools from "./tools";
 import * as servicesTools from "./servicesTools";
 import * as fs from "fs";
 import * as path from "path";
-import { ContainerCreateOptions } from "./models/docker";
 import {
   ComposeDownOptions,
   ComposeOutput,
@@ -192,7 +191,7 @@ export module Services {
         }
       }
 
-      var opts: ContainerCreateOptions = {
+      var opts: Dockerode.ContainerCreateOptions = {
         name: projectName + "_" + serviceName + "_1",
         Image: service.image,
         HostConfig: servicesTools.buildHostConfig(projectName, service, recipe),
@@ -342,7 +341,7 @@ export module Services {
         servicesLabels.addServiceLabels(service, opts);
       }
       if (service.healthcheck !== undefined) {
-        let healthcheck: ContainerCreateOptions["Healthcheck"] = {};
+        let healthcheck: Dockerode.ContainerCreateOptions["Healthcheck"] = {};
         healthcheck.Test = service.healthcheck.test;
         healthcheck.Interval = convertFancyDurationToMs(
           service.healthcheck.interval

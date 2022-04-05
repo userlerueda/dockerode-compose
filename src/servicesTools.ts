@@ -5,7 +5,6 @@ import * as path from "path";
 import { stdout } from "process";
 import * as stream from "stream";
 import * as tar from "tar-fs";
-import { ContainerCreateOptions } from "./models/docker";
 import {
   ComposeUpOptions,
   DockerComposeRecipe,
@@ -18,7 +17,7 @@ export function buildHostConfig(
   service: DockerComposeService,
   recipe: DockerComposeRecipe
 ): Dockerode.ContainerCreateOptions["HostConfig"] {
-  let hostConfig: ContainerCreateOptions["HostConfig"] = {
+  let hostConfig: Dockerode.ContainerCreateOptions["HostConfig"] = {
     RestartPolicy: { Name: service.restart },
   };
 
@@ -296,8 +295,8 @@ export function buildVolumes(
   }
 }
 
-export function buildEnvVars(service): ContainerCreateOptions["Env"] {
-  var output: ContainerCreateOptions["Env"] = [];
+export function buildEnvVars(service): Dockerode.ContainerCreateOptions["Env"] {
+  var output: Dockerode.ContainerCreateOptions["Env"] = [];
 
   if (service.env_file !== undefined) {
     if (Array.isArray(service.env_file)) {
@@ -442,7 +441,7 @@ export function convertSizeStringToByteValue(obj) {
 
 export function buildEnvVarsFromFile(
   env_file_path: fs.PathOrFileDescriptor,
-  output: ContainerCreateOptions["Env"]
+  output: Dockerode.ContainerCreateOptions["Env"]
 ) {
   // Each line in an env file MUST be in `VAR=VAL` format.
   let env_file = fs.readFileSync(env_file_path, "utf8").toString().split("\n");
