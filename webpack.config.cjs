@@ -3,7 +3,7 @@ const TypescriptDeclarationPlugin = require('typescript-declaration-webpack-plug
 
 const commonConfig = {
   entry: './src/compose.ts',
-  devtool: 'source-map',
+  devtool: 'inline-source-map',
   mode: 'production',
   module: {
     rules: [
