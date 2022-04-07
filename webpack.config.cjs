@@ -37,9 +37,9 @@ const cjsConfig = {
   output: {
     library: { type: 'commonjs' },
     path: path.resolve(__dirname, 'dist'),
-    filename: 'dockreode-compose.cjs',
+    filename: 'dockerode-compose.cjs',
   },
-  plugins: [new TypescriptDeclarationPlugin({ out: 'dockreode-compose.d.ts' })],
+  plugins: [new TypescriptDeclarationPlugin({ out: 'dockerode-compose.d.ts' })],
   target: 'node',
 };
 
@@ -52,9 +52,9 @@ const mjsConfig = {
     chunkFormat: 'module',
     library: { type: 'module' },
     path: path.resolve(__dirname, 'dist'),
-    filename: 'dockreode-compose.mjs',
+    filename: 'dockerode-compose.mjs',
   },
-  plugins: [new TypescriptDeclarationPlugin({ out: 'dockreode-compose.d.ts' })],
+  plugins: [new TypescriptDeclarationPlugin({ out: 'dockerode-compose.d.ts' })],
   target: 'node',
 };
 
