@@ -28,7 +28,7 @@ export module Volumes {
     output: ComposeOutput
   ): Promise<ComposeOutput["volumes"]> {
     console.info("Creating volumes...");
-    var volumes = [];
+    var volumes: Dockerode.VolumeCreateResponse[] = [];
     var volumeNames = Object.keys(recipe.volumes || []);
     for (var volumeName of volumeNames) {
       var volume = recipe.volumes[volumeName];

@@ -1,36 +1,47 @@
-import { createHash } from "crypto";
-import * as Dockerode from "dockerode";
-import * as fs from "fs";
-import * as path from "path";
-import { stdout } from "process";
-import * as stream from "stream";
-import * as tar from "tar-fs";
+import { createHash } from 'crypto';
+import * as Dockerode from 'dockerode';
+import * as fs from 'fs';
+import * as path from 'path';
+import { stdout } from 'process';
+import * as stream from 'stream';
+import * as tar from 'tar-fs';
 import {
   ComposeUpOptions,
   DockerComposeRecipe,
   DockerComposeService,
-} from "./models/dockerCompose";
+  DockerComposeServiceVolume,
+} from './models/dockerCompose';
+import _ from 'lodash';
 
 //ToDo: complete the compose specification
 export function buildHostConfig(
   projectName: string,
   service: DockerComposeService,
-  recipe: DockerComposeRecipe
-): Dockerode.ContainerCreateOptions["HostConfig"] {
-  let hostConfig: Dockerode.ContainerCreateOptions["HostConfig"] = {
-    RestartPolicy: { Name: service.restart },
-  };
+  recipe: DockerComposeRecipe,
+): Dockerode.ContainerCreateOptions['HostConfig'] {
+  let hostConfig: Dockerode.ContainerCreateOptions['HostConfig'];
+  if (service.restart !== undefined) {
+    hostConfig = {
+      RestartPolicy: { Name: service.restart },
+    };
+  } else {
+    hostConfig = {};
+  }
 
-  if (service.volumes_from !== undefined) {
-    for (var volume_from of service.volumes_from) {
-      var vf = volume_from.split(":");
-      var svf = recipe.services[vf[0]];
-      this.buildVolumesHostconfig(projectName, svf.volumes, hostConfig, vf[1]);
+  if (recipe.services !== undefined) {
+    if (service.volumes_from !== undefined) {
+      for (var volume_from of service.volumes_from) {
+        var vf = volume_from.split(':');
+        var svf = recipe.services[vf[0]];
+        if (svf.volumes !== undefined) {
+          buildVolumesHostconfig(projectName, svf.volumes, hostConfig, vf[1]);
+        }
+      }
     }
   }
 
   if (service.volumes !== undefined) {
-    this.buildVolumesHostconfig(projectName, service.volumes, hostConfig);
+    buildVolumesHostconfig(projectName, service.volumes, hostConfig);
   }
 
   if (service.autoremove !== undefined) {
@@ -79,7 +90,7 @@ export function buildHostConfig(
     hostConfig.DnsOptions = service.dns_opt;
   }
   if (service.dns_search !== undefined) {
-    if (typeof service.dns_search === "string") {
+    if (typeof service.dns_search === 'string') {
       hostConfig.DnsSearch = [service.dns_search];
     } else {
       hostConfig.DnsSearch = service.dns_search;
@@ -137,7 +148,7 @@ export function buildHostConfig(
     if (Array.isArray(service.sysctls)) {
       var sysctls = {};
       for (var sysctlsb of service.sysctls) {
-        let p = sysctlsb.split("=");
+        let p = sysctlsb.split('=');
         sysctls[p[0]] = p[1];
       }
       hostConfig.Sysctls = sysctls;
@@ -157,17 +168,17 @@ export function buildHostConfig(
     var tmpfs = {};
     if (Array.isArray(service.tmpfs)) {
       for (var tmpfsb of service.tmpfs) {
-        let p = tmpfsb.split(":");
+        let p = tmpfsb.split(':');
         if (p[1] === undefined) {
-          p[1] = "";
+          p[1] = '';
         }
         tmpfs[p[0]] = p[1];
       }
       hostConfig.Tmpfs = tmpfs;
     } else {
-      let p = service.tmpfs.split(":");
+      let p = service.tmpfs.split(':');
       if (p[1] === undefined) {
-        p[1] = "";
+        p[1] = '';
       }
       tmpfs[p[0]] = p[1];
       hostConfig.Tmpfs = tmpfs;
@@ -175,10 +186,10 @@ export function buildHostConfig(
   }
   if (service.ulimits !== undefined) {
     let ulimitsKeys = Object.keys(service.ulimits);
-    let ulimitsArray = [];
+    let ulimitsArray: DockerComposeService['ulimits'][] = [];
     for (let key of ulimitsKeys) {
-      let ulimitsObject: DockerComposeService["ulimits"] = {};
-      if (typeof service.ulimits[key] === "object") {
+      let ulimitsObject: DockerComposeService['ulimits'] = {};
+      if (typeof service.ulimits[key] === 'object') {
         ulimitsObject.Name = key;
         ulimitsObject.Soft = service.ulimits[key].soft;
         ulimitsObject.Hard = service.ulimits[key].hard;
@@ -198,39 +209,31 @@ export function buildHostConfig(
     }
     if (service.blkio_config.weight_device !== undefined) {
       let weight_device = [{}];
-      weight_device[0]["Path"] = service.blkio_config.weight_device[0].path;
-      weight_device[0]["Weight"] = service.blkio_config.weight_device[0].weight;
+      weight_device[0]['Path'] = service.blkio_config.weight_device[0].path;
+      weight_device[0]['Weight'] = service.blkio_config.weight_device[0].weight;
       hostConfig.BlkioWeightDevice = weight_device;
     }
     if (service.blkio_config.device_read_bps !== undefined) {
-      hostConfig.BlkioDeviceReadBps = convertSizeStringToByteValue(
-        service.blkio_config.device_read_bps
-      );
+      hostConfig.BlkioDeviceReadBps = convertSizeStringToByteValue(service.blkio_config.device_read_bps);
     }
     if (service.blkio_config.device_read_iops !== undefined) {
       let device_read_iops = [{}];
-      device_read_iops[0]["Path"] =
-        service.blkio_config.device_read_iops[0].path;
-      device_read_iops[0]["Rate"] =
-        service.blkio_config.device_read_iops[0].rate;
+      device_read_iops[0]['Path'] = service.blkio_config.device_read_iops[0].path;
+      device_read_iops[0]['Rate'] = service.blkio_config.device_read_iops[0].rate;
       hostConfig.BlkioDeviceReadIOps = device_read_iops;
     }
     if (service.blkio_config.device_write_bps !== undefined) {
-      hostConfig.BlkioDeviceWriteBps = convertSizeStringToByteValue(
-        service.blkio_config.device_write_bps
-      );
+      hostConfig.BlkioDeviceWriteBps = convertSizeStringToByteValue(service.blkio_config.device_write_bps);
     }
     if (service.blkio_config.device_write_iops !== undefined) {
       let device_write_iops = [{}];
-      device_write_iops[0]["Path"] =
-        service.blkio_config.device_write_iops[0].path;
-      device_write_iops[0]["Rate"] =
-        service.blkio_config.device_write_iops[0].rate;
+      device_write_iops[0]['Path'] = service.blkio_config.device_write_iops[0].path;
+      device_write_iops[0]['Rate'] = service.blkio_config.device_write_iops[0].rate;
       hostConfig.BlkioDeviceWriteIOps = device_write_iops;
     }
   }
   if (service.logging !== undefined) {
-    let logging: DockerComposeService["logging"] = {};
+    let logging: DockerComposeService['logging'] = {};
     logging.Type = service.logging.driver;
     logging.Config = service.logging.options;
     hostConfig.LogConfig = logging;
@@ -240,63 +243,59 @@ export function buildHostConfig(
 
 export function buildVolumesHostconfig(
   projectName: string,
-  volumes,
-  output,
-  type
+  volumes: DockerComposeServiceVolume[],
+  output: Dockerode.HostConfig,
+  type?: string | undefined,
 ) {
-  if (output["Binds"] === undefined) {
-    output["Binds"] = [];
+  if (output['Binds'] === undefined) {
+    output['Binds'] = [];
   }
   for (var volume of volumes) {
-    if (typeof volume === "string" || volume instanceof String) {
-      var aux = volume;
-      if (type == "ro") {
-        aux += ":ro";
-      }
-      output["Binds"].push(aux);
-    } else {
-      var volumestr = "";
+    if (typeof volume === 'object') {
+      var volumestr = '';
       if (volume.source && volume.target) {
-        volumestr += volume.source + ":" + volume.target + ":";
+        volumestr += volume.source + ':' + volume.target + ':';
       }
-      if (volume.read_only || type == "ro") {
-        volumestr += "ro,";
+      if (volume.read_only || type == 'ro') {
+        volumestr += 'ro,';
       }
       if (volume.volume && volume.volume.nocopy) {
-        volumestr += "nocopy,";
+        volumestr += 'nocopy,';
       }
       if (volume.bind && volume.bind.propagation) {
-        volumestr += volume.bind.propagation + ",";
+        volumestr += volume.bind.propagation + ',';
       }
       volumestr = volumestr.slice(0, -1);
-      output["Binds"].push(volumestr);
-    }
-  }
-}
-
-export function buildVolumes(
-  volumes: DockerComposeService["volumes"],
-  opts: Dockerode.ContainerCreateOptions
-) {
-  if (opts["Volumes"] === undefined) {
-    opts["Volumes"] = {};
-  }
-  for (var volume of volumes) {
-    if (typeof volume === "object") {
-      // Long syntax
-      if (volume.target) {
-        opts["Volumes"][volume.target] = {};
-      }
+      output['Binds'].push(volumestr);
     } else {
-      // Short syntax
-      var v = volume.split(":");
-      opts["Volumes"][v[1]] = {};
+      var aux = volume;
+      if (type == 'ro') {
+        aux += ':ro';
+      }
+      output['Binds'].push(aux);
     }
   }
 }
 
-export function buildEnvVars(service): Dockerode.ContainerCreateOptions["Env"] {
-  var output: Dockerode.ContainerCreateOptions["Env"] = [];
+export function buildVolumes(volumes: DockerComposeService['volumes'], opts: Dockerode.ContainerCreateOptions) {
+  if (volumes !== undefined) {
+    for (var volume of volumes) {
+      if (typeof volume === 'object') {
+        // Long syntax
+        if (volume.target) {
+          _.set(opts, 'Volumes.' + volume.target, {});
+        }
+      } else {
+        // Short syntax
+        var v = volume.split(':');
+        _.set(opts, 'Volumes.' + v[1], {});
+      }
+    }
+  }
+}
+
+export function buildEnvVars(service): Dockerode.ContainerCreateOptions['Env'] {
+  var output: Dockerode.ContainerCreateOptions['Env'] = [];
 
   if (service.env_file !== undefined) {
     if (Array.isArray(service.env_file)) {
@@ -316,7 +315,7 @@ export function buildEnvVars(service): Dockerode.ContainerCreateOptions["Env"] {
     } else {
       var envsNames = Object.keys(service.environment);
       for (var envName of envsNames) {
-        output.push(envName + "=" + service.environment[envName]);
+        output.push(envName + '=' + service.environment[envName]);
       }
     }
   }
@@ -328,25 +327,25 @@ export function buildNetworks(
   serviceName: string,
   serviceNetworks,
   networksToAttach,
-  opts: Dockerode.ContainerCreateOptions
+  opts: Dockerode.ContainerCreateOptions,
 ) {
   console.debug({
     buildNetworks: { projectName, serviceNetworks, networksToAttach, opts },
   });
+
   if (Array.isArray(serviceNetworks)) {
     for (let index = 0; index < serviceNetworks.length; index++) {
-      let networkName = projectName + "_" + serviceNetworks[index];
+      let networkName = projectName + '_' + serviceNetworks[index];
       let networkTemplate = {
         NetworkingConfig: {
           EndpointsConfig: {},
         },
       };
       networkTemplate.NetworkingConfig.EndpointsConfig[networkName] = {};
-      networkTemplate.NetworkingConfig.EndpointsConfig[networkName]["Aliases"] =
-        [serviceName];
-      if (index === 0)
-        opts.NetworkingConfig.EndpointsConfig =
-          networkTemplate.NetworkingConfig.EndpointsConfig;
+      networkTemplate.NetworkingConfig.EndpointsConfig[networkName]['Aliases'] = [serviceName];
+      if (index === 0) {
+        _.set(opts, 'HostConfig.NetworkingConfig.EndpointsConfig', networkTemplate.NetworkingConfig.EndpointsConfig);
+      }
 
       networksToAttach.push(networkTemplate.NetworkingConfig.EndpointsConfig);
     }
@@ -354,47 +353,34 @@ export function buildNetworks(
     let networkNames = Object.keys(serviceNetworks);
     for (let index = 0; index < networkNames.length; index++) {
       let network = serviceNetworks[networkNames[index]] || {};
-      let networkName = projectName + "_" + networkNames[index];
+      let networkName = projectName + '_' + networkNames[index];
       let networkTemplate = {
         NetworkingConfig: {
           EndpointsConfig: {},
         },
       };
       networkTemplate.NetworkingConfig.EndpointsConfig[networkName] = {};
-      networkTemplate.NetworkingConfig.EndpointsConfig[networkName][
-        "IPAMConfig"
-      ] = {};
+      networkTemplate.NetworkingConfig.EndpointsConfig[networkName]['IPAMConfig'] = {};
       if (network.aliases !== undefined) {
-        networkTemplate.NetworkingConfig.EndpointsConfig[networkName][
-          "Aliases"
-        ] = network.aliases;
+        networkTemplate.NetworkingConfig.EndpointsConfig[networkName]['Aliases'] = network.aliases;
       }
       if (network.ipv4_address !== undefined) {
-        networkTemplate.NetworkingConfig.EndpointsConfig[
-          networkName
-        ].IPAMConfig["IPv4Address"] = network.ipv4_address;
+        networkTemplate.NetworkingConfig.EndpointsConfig[networkName].IPAMConfig['IPv4Address'] = network.ipv4_address;
       }
       if (network.ipv6_address !== undefined) {
-        networkTemplate.NetworkingConfig.EndpointsConfig[
-          networkName
-        ].IPAMConfig["IPv6Address"] = network.ipv6_address;
+        networkTemplate.NetworkingConfig.EndpointsConfig[networkName].IPAMConfig['IPv6Address'] = network.ipv6_address;
       }
       if (network.link_local_ips !== undefined) {
-        networkTemplate.NetworkingConfig.EndpointsConfig[
-          networkName
-        ].IPAMConfig["LinkLocalIPs"] = network.link_local_ips;
+        networkTemplate.NetworkingConfig.EndpointsConfig[networkName].IPAMConfig['LinkLocalIPs'] =
+          network.link_local_ips;
       }
       if (network.priority !== undefined) {
-        networkTemplate.NetworkingConfig.EndpointsConfig[networkName].priority =
-          network.priority;
+        networkTemplate.NetworkingConfig.EndpointsConfig[networkName].priority = network.priority;
       } else {
-        networkTemplate.NetworkingConfig.EndpointsConfig[
-          networkName
-        ].priority = 0;
+        networkTemplate.NetworkingConfig.EndpointsConfig[networkName].priority = 0;
       }
       if (index === 0) {
-        opts.NetworkingConfig.EndpointsConfig =
-          networkTemplate.NetworkingConfig.EndpointsConfig;
+        _.set(opts, 'NetworkingConfig.EndpointsConfig', networkTemplate.NetworkingConfig.EndpointsConfig);
       }
       networksToAttach.push(networkTemplate.NetworkingConfig.EndpointsConfig);
     }
@@ -408,32 +394,32 @@ export function buildNetworks(
 export function convertSizeStringToByteValue(obj) {
   let rate = obj[0].rate.toLowerCase();
   let new_obj = [{}];
-  if (rate.includes("k")) {
-    if (rate.indexOf("k") == rate.length - 1) {
-      rate = rate.replace("k", "");
-    } else if (rate.indexOf("k") == rate.length - 2) {
-      rate = rate.replace("kb", "");
+  if (rate.includes('k')) {
+    if (rate.indexOf('k') == rate.length - 1) {
+      rate = rate.replace('k', '');
+    } else if (rate.indexOf('k') == rate.length - 2) {
+      rate = rate.replace('kb', '');
     }
-    new_obj[0]["Path"] = obj[0].path;
-    new_obj[0]["Rate"] = rate * 1024;
+    new_obj[0]['Path'] = obj[0].path;
+    new_obj[0]['Rate'] = rate * 1024;
     return new_obj;
-  } else if (rate.includes("m")) {
-    if (rate.indexOf("m") == rate.length - 1) {
-      rate = rate.replace("m", "");
-    } else if (rate.indexOf("m") == rate.length - 2) {
-      rate = rate.replace("mb", "");
+  } else if (rate.includes('m')) {
+    if (rate.indexOf('m') == rate.length - 1) {
+      rate = rate.replace('m', '');
+    } else if (rate.indexOf('m') == rate.length - 2) {
+      rate = rate.replace('mb', '');
     }
-    new_obj[0]["Path"] = obj[0].path;
-    new_obj[0]["Rate"] = rate * 1024 * 1024;
+    new_obj[0]['Path'] = obj[0].path;
+    new_obj[0]['Rate'] = rate * 1024 * 1024;
     return new_obj;
-  } else if (rate.includes("g")) {
-    if (rate.indexOf("g") == rate.length - 1) {
-      rate = rate.replace("g", "");
-    } else if (rate.indexOf("g") == rate.length - 2) {
-      rate = rate.replace("gb", "");
+  } else if (rate.includes('g')) {
+    if (rate.indexOf('g') == rate.length - 1) {
+      rate = rate.replace('g', '');
+    } else if (rate.indexOf('g') == rate.length - 2) {
+      rate = rate.replace('gb', '');
     }
-    new_obj[0]["Path"] = obj[0].path;
-    new_obj[0]["Rate"] = rate * 1024 * 1024 * 1024;
+    new_obj[0]['Path'] = obj[0].path;
+    new_obj[0]['Rate'] = rate * 1024 * 1024 * 1024;
     return new_obj;
   }
   return obj;
@@ -441,17 +427,21 @@ export function convertSizeStringToByteValue(obj) {
 
 export function buildEnvVarsFromFile(
   env_file_path: fs.PathOrFileDescriptor,
-  output: Dockerode.ContainerCreateOptions["Env"]
+  output: Dockerode.ContainerCreateOptions['Env'],
 ) {
   // Each line in an env file MUST be in `VAR=VAL` format.
-  let env_file = fs.readFileSync(env_file_path, "utf8").toString().split("\n");
+  let env_file = fs.readFileSync(env_file_path, 'utf8').toString().split('\n');
   for (let env_line of env_file) {
     // Lines beginning with `#` MUST be ignored. Blank lines MUST also be ignored.
-    if (env_line != "" && env_line.indexOf("#") != 0) {
-      let env_line_split = env_line.split("=");
+    if (env_line != '' && env_line.indexOf('#') != 0) {
+      let env_line_split = env_line.split('=');
       // `VAL` MAY be omitted, sin such cases the variable value is empty string. `=VAL` MAY be omitted, in such cases the variable is **unset**.
-      if (env_line_split[0] != "" && env_line_split[1] != "") {
-        output.push(env_line);
+      if (env_line_split[0] != '' && env_line_split[1] != '') {
+        if (output === undefined) {
+          output = [env_line];
+        } else {
+          output.push(env_line);
+        }
       }
     }
   }
@@ -461,25 +451,25 @@ export async function buildDockerImage(
   docker: Dockerode,
   buildPath: string,
   obj: Dockerode.ImageBuildOptions,
-  dockerfile: string,
-  options: ComposeUpOptions
+  dockerfile: string | null,
+  options: ComposeUpOptions,
 ) {
   options = options || {};
   if (dockerfile !== null) {
-    obj["dockerfile"] = path.basename(dockerfile);
+    obj['dockerfile'] = path.basename(dockerfile);
     let streami = await docker.buildImage(
       {
         context: buildPath,
         src: [dockerfile],
       },
-      obj
+      obj,
     );
     if (options.verbose === true) {
       streami.pipe(stdout);
     } else {
       streami.pipe(new stream.PassThrough());
     }
-    await new Promise((fulfill) => streami.once("end", fulfill));
+    await new Promise((fulfill) => streami.once('end', fulfill));
   } else {
     var tarStream: NodeJS.ReadableStream = tar.pack(buildPath);
     let streami = await docker.buildImage(tarStream, obj);
@@ -488,10 +478,10 @@ export async function buildDockerImage(
     } else {
       streami.pipe(new stream.PassThrough());
     }
-    await new Promise((fulfill) => streami.once("end", fulfill));
+    await new Promise((fulfill) => streami.once('end', fulfill));
   }
 }
 
 export function buildSHA256(serviceString: string) {
-  return createHash("sha256").update(serviceString).digest("hex");
+  return createHash('sha256').update(serviceString).digest('hex');
 }

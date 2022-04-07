@@ -28,7 +28,7 @@ async function secretsUp(
   recipe: DockerComposeRecipe,
   output: ComposeOutput
 ) {
-  var secrets = [];
+  var secrets: any[] = [];
   var secretNames = Object.keys(recipe.secrets || []);
   for (var secretName of secretNames) {
     var secret = recipe.secrets[secretName];

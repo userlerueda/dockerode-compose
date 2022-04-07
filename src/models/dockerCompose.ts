@@ -1,24 +1,22 @@
-import * as Dockerode from "dockerode";
+import * as Dockerode from 'dockerode';
 
 export interface ComposeDownOptions {
-  rmi?: "all" | "local";
-  "remove-orphans"?: boolean;
+  rmi?: 'all' | 'local';
+  'remove-orphans'?: boolean;
   v?: string;
   volumes?: string;
 }
 export interface ComposePullArgs {
-  serviceName?: string;
-  options?: ComposePullOptions;
-  callback?: Callback<any>;
+  serviceName: string | undefined;
+  options: ComposePullOptions;
+  callback: Callback<any> | undefined;
 }
 export interface ComposePullOptions {
   verbose?: any;
   streams?: any;
   services?: string;
 }
-export interface ComposeRestartOptions
-  extends ComposeDownOptions,
-    ComposeUpOptions {}
+export interface ComposeRestartOptions extends ComposeDownOptions, ComposeUpOptions {}
 export interface ComposeUpOptions {
   verbose?: boolean;
 }
@@ -27,7 +25,7 @@ export interface ComposeOutput {
   configs?: any[];
   file?: string;
   images?: Dockerode.Image[];
-  networks?: any[];
+  networks?: Network[];
   services?: any[];
   volumes?: any[];
 }
@@ -136,9 +134,7 @@ export interface DockerComposeService {
   logging?: any;
 }
 export type DockerComposePort = string | DockerComposePortLongSyntax;
-export type DockerComposeServiceVolume =
-  | string
-  | DockerComposeServiceVolumesLongSyntax;
+export type DockerComposeServiceVolume = string | DockerComposeServiceVolumesLongSyntax;
 export interface DockerComposePortLongSyntax {
   target: number;
   published: number;
@@ -146,14 +142,14 @@ export interface DockerComposePortLongSyntax {
   mode: string;
 }
 export interface DockerComposeServiceVolumesLongSyntax {
-  type: "volume" | "bind" | "tmpfs" | "npipe";
+  type: 'volume' | 'bind' | 'tmpfs' | 'npipe';
   source?: string;
   target?: string;
   read_only?: boolean;
   bind?: {
     propagation?: string;
     create_host_path?: boolean;
-    selinux?: "z" | "Z";
+    selinux?: 'z' | 'Z';
   };
   volume?: {
     nocopy?: boolean;
@@ -164,3 +160,9 @@ export interface DockerComposeServiceVolumesLongSyntax {
   consistency?: string;
 }
 export type Callback<T> = (error?: any, result?: T) => void;
+
+export interface Network {
+  name: string;
+  isDefault?: boolean;
+  network: Dockerode.Network;
+}

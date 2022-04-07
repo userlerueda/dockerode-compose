@@ -1,17 +1,24 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "allowSyntheticDefaultImports": true,
     "declaration": true,
-    "lib": [ "es2015", "dom" ],
+    "lib": ["es2015", "dom"],
     "module": "es6",
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
     "noImplicitReturns": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
     "sourceMap": true,
+    "strict": true,
     "outDir": "./dist/lib-esm",
     "target": "es5"
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.spec.ts"],
+  "ts-node": {
+    "esm": true
+  }
 }

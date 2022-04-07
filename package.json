@@ -2,22 +2,22 @@
   "name": "dockerode-compose",
   "version": "1.4.0",
   "description": "docker-compose in nodejs using dockerode",
-  "main": "./dist/bundle.cjs",
-  "module": "./dist/bundle.mjs",
+  "main": "./dist/dockerode-compose.cjs",
   "exports": {
-    "require": "./dist/bundle.cjs",
-    "import": "./dist/bundle.mjs",
-    "default": "./dist/bundle.mjs"
+    ".": {
+      "import": "./dist/dockerode-compose.mjs",
+      "require": "./dist/dockerode-compose.cjs"
+    },
+    "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts",
+  "types": "dist/dockerode-compose.d.ts",
   "type": "module",
   "scripts": {
     "prepare": "npm run clean && npm run build",
-    "test": "npx mocha -r ts-node/register src/**/*.spec.ts",
-    "test:watch": "npx mocha -w -r ts-node/register src/**/*.spec.ts",
-    "build": "tsc --build && tsc --build tsconfig.cjs.json && npx webpack",
-    "clean": "rm -rf dist && rm -rf lib-esm && rm -rf lib",
-    "watch": "tsc --watch"
+    "test": "TS_NODE_PROJECT='./tsconfig.spec.json' npx mocha src/**/*.spec.ts",
+    "build": "npx webpack --stats-error-details",
+    "clean": "rm -rf dist",
+    "watch": "npx webpack --watch"
   },
   "repository": {
     "type": "git",

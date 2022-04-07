@@ -14,7 +14,7 @@ export async function isServiceUpToDate(
     filters: `{"label":["com.docker.compose.project=${projectName}","com.docker.compose.service=${serviceName}"]}`,
   });
 
-  let existingContainer: Dockerode.Container;
+  let existingContainer: Dockerode.Container | undefined;
   if (currentServices.length !== 0) {
     console.debug(
       `Found '${currentServices.length}' containers for service: ${serviceName}`

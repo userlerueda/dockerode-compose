@@ -1,5 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
 const TypescriptDeclarationPlugin = require('typescript-declaration-webpack-plugin');
 
 const commonConfig = {
@@ -36,20 +35,26 @@ const cjsConfig = {
     ],
   },
   output: {
+    library: { type: 'commonjs' },
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.cjs',
+    filename: 'dockreode-compose.cjs',
   },
-  plugins: [new TypescriptDeclarationPlugin({ out: 'index.d.ts' })],
+  plugins: [new TypescriptDeclarationPlugin({ out: 'dockreode-compose.d.ts' })],
   target: 'node',
 };
 
 const mjsConfig = {
   ...commonConfig,
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.mjs',
+  experiments: {
+    outputModule: true,
   },
-  plugins: [new TypescriptDeclarationPlugin({ out: 'index.d.ts' })],
+  output: {
+    chunkFormat: 'module',
+    library: { type: 'module' },
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'dockreode-compose.mjs',
+  },
+  plugins: [new TypescriptDeclarationPlugin({ out: 'dockreode-compose.d.ts' })],
   target: 'node',
 };
 
