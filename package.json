@@ -1,6 +1,6 @@
 {
   "name": "dockerode-compose",
-  "version": "1.4.0",
+  "version": "2.0.0-alpha.1",
   "description": "docker-compose in nodejs using dockerode",
   "main": "./dist/dockerode-compose.cjs",
   "exports": {
